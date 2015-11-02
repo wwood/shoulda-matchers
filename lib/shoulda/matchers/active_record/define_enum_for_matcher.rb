@@ -64,7 +64,7 @@ module Shoulda
 
         def matches?(subject)
           @model = subject
-          enum_defined? && enum_values_match?
+          enum_defined? && enum_values_match? && column_type_is_integer?
         end
 
         def failure_message
@@ -83,6 +83,8 @@ module Shoulda
           if options[:expected_enum_values]
             desc << " with #{options[:expected_enum_values]}"
           end
+
+          desc << " and store the value in a column with an integer type"
 
           desc
         end
@@ -109,6 +111,18 @@ module Shoulda
 
         def enum_values_match?
           expected_enum_values.empty? || actual_enum_values == expected_enum_values
+        end
+
+        def matched_column
+          @_matched_column ||= begin
+            @model.class.columns.detect do |column|
+              column.name == attribute_name.to_s
+            end
+          end
+        end
+
+        def column_type_is_integer?
+          matched_column.type == :integer
         end
 
         def hashify(value)
