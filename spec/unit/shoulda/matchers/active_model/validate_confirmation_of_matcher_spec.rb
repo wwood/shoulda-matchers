@@ -114,4 +114,67 @@ Example did not properly validate that
         to validate_confirmation_of(builder.attribute_to_confirm)
     end
   end
+
+  context 'when the writer method for the attribute changes incoming values' do
+    context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+      it 'raises an AttributeChangedValueError' do
+        builder = builder_for_record_validating_confirmation(
+          attribute: :password
+        )
+
+        builder.model.class_eval do
+          def password=(value)
+            super(value.upcase)
+          end
+        end
+
+        assertion = lambda do
+          expect(builder.record).to validate_confirmation_of(:password)
+        end
+
+        expect(&assertion).to raise_error(
+          Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
+        )
+      end
+    end
+
+    context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+      it 'fails, but then lists how values were changed' do
+        builder = builder_for_record_validating_confirmation(
+          attribute: :password
+        )
+
+        builder.model.class_eval do
+          def password=(value)
+            super(value.upcase)
+          end
+        end
+
+        assertion = lambda do
+          expect(builder.record).
+            to validate_confirmation_of(:password).
+            ignoring_interference_by_writer
+        end
+
+        message = <<-MESSAGE
+Example did not properly validate that :password_confirmation matches
+:password.
+  After setting :password_confirmation to "same value", then setting
+  :password to "same value" -- which was read back as "SAME VALUE" --
+  the matcher expected the Example to be valid, but it was invalid
+  instead, producing these validation errors:
+
+  * password_confirmation: ["doesn't match Password"]
+
+  As indicated in the message above, :password seems to be changing
+  certain values as they are set, and this could have something to do
+  with why this test is failing. If you've overridden the writer method
+  for this attribute, then you may need to change it to make this test
+  pass, or do something else entirely.
+        MESSAGE
+
+        expect(&assertion).to fail_with_message(message)
+      end
+    end
+  end
 end

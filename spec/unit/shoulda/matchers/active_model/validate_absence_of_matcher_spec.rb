@@ -145,14 +145,66 @@ Parent did not properly validate that :children is empty/falsy.
       end
     end
 
-    def validating_absence_of(attr, validation_options = {}, given_column_options = {})
+    context 'when the writer method for the attribute changes incoming values' do
+      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+        it 'raises a CouldNotSetAttributeError' do
+          model = define_model_validating_absence_of(:name)
+
+          model.class_eval do
+            def name=(name)
+              super(name.upcase)
+            end
+          end
+
+          assertion = lambda do
+            expect(model.new).to validate_absence_of(:name)
+          end
+
+          expect(&assertion).to raise_error(
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
+          )
+        end
+      end
+
+      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+        context 'and the value change does not cause a test failure' do
+          it 'does not raise a CouldNotSetAttributeError' do
+            model = define_model_validating_absence_of(:name) do
+              def name=(name)
+                super(name.upcase)
+              end
+            end
+
+            expect(model.new).
+              to validate_absence_of(:name).
+              ignoring_interference_by_writer
+          end
+        end
+      end
+    end
+
+    def define_model_validating_absence_of(attr, validation_options = {}, given_column_options = {})
       default_column_options = { type: :string, options: {} }
       column_options = default_column_options.merge(given_column_options)
 
-      define_model :example, attr => column_options do
-        validates_absence_of attr, validation_options
-      end.new
+      define_model :example, attr => column_options do |model|
+        model.validates_absence_of(attr, validation_options)
+
+        if block_given?
+          yield model
+        end
+      end
     end
+
+    def validating_absence_of(attr, validation_options = {}, given_column_options = {})
+      model = define_model_validating_absence_of(
+        attr,
+        validation_options,
+        given_column_options
+      )
+      model.new
+    end
+    alias_method :build_record_validating_absence_of, :validating_absence_of
 
     def active_model_with(attr, &block)
       define_active_model_class('Example', accessors: [attr], &block).new

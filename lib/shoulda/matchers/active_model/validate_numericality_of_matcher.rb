@@ -412,8 +412,8 @@ module Shoulda
           @subject = subject
           @number_of_submatchers = @submatchers.size
 
-          if given_numeric_column?
-            remove_disallow_value_matcher
+          unless given_numeric_column?
+            add_disallow_value_matcher
           end
 
           if @submatchers.empty?
@@ -511,15 +511,12 @@ module Shoulda
         end
 
         def add_disallow_value_matcher
-          disallow_value_matcher = DisallowValueMatcher.new(NON_NUMERIC_VALUE).
+          disallow_value_matcher = DisallowValueMatcher.
+            new(NON_NUMERIC_VALUE).
             for(@attribute).
             with_message(:not_a_number)
 
           add_submatcher(disallow_value_matcher)
-        end
-
-        def remove_disallow_value_matcher
-          @submatchers.shift
         end
 
         def prepare_submatcher(submatcher)
@@ -531,9 +528,8 @@ module Shoulda
         end
 
         def comparison_matcher_for(value, operator)
-          NumericalityMatchers::ComparisonMatcher
-            .new(self, value, operator)
-            .for(@attribute)
+          NumericalityMatchers::ComparisonMatcher.new(self, value, operator).
+            for(@attribute)
         end
 
         def add_submatcher(submatcher)
