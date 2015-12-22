@@ -147,7 +147,7 @@ Parent did not properly validate that :children is empty/falsy.
 
     context 'when the writer method for the attribute changes incoming values' do
       context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises a CouldNotSetAttributeError' do
+        it 'raises an AttributeChangedValueError' do
           model = define_model_validating_absence_of(:name)
 
           model.class_eval do
@@ -161,7 +161,7 @@ Parent did not properly validate that :children is empty/falsy.
           end
 
           expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
           )
         end
       end

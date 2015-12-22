@@ -31,7 +31,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
 
   context 'when the writer method for the attribute changes incoming values' do
     context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-      it 'raises a CouldNotSetAttributeError' do
+      it 'raises an AttributeChangedValueError' do
         model = define_model_validating_acceptance(
           attribute_name: :terms_of_service
         )
@@ -53,7 +53,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
         end
 
         expect(&assertion).to raise_error(
-          Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
+          Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
         )
       end
     end
@@ -82,13 +82,15 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
             ignoring_interference_by_writer
         end
 
-        xcontext 'and the value change causes a test failure' do
+        context 'and the value change causes a test failure' do
           it 'lists how the value got changed in the failure message' do
             model = define_model_validating_acceptance(
               attribute_name: :terms_of_service
             )
 
             model.class_eval do
+              undef_method :terms_of_service=
+
               def terms_of_service=(value)
               end
             end
@@ -100,7 +102,17 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
             end
 
             message = <<-MESSAGE
-This is yo message, yo.
+Example did not properly validate that :terms_of_service has been set to
+"1".
+  After setting :terms_of_service to false -- which was read back as nil
+  -- the matcher expected the Example to be invalid, but it was valid
+  instead.
+
+  As indicated in the message above, :terms_of_service seems to be
+  changing certain values as they are set, and this could have something
+  to do with why this test is failing. If you've overridden the writer
+  method for this attribute, then you may need to change it to make this
+  test pass, or do something else entirely.
             MESSAGE
 
             expect(&assertion).to fail_with_message(message)

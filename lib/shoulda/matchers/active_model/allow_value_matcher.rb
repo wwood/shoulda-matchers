@@ -432,6 +432,10 @@ module Shoulda
             end
           end
 
+          if include_attribute_changed_value_message?
+            message << "\n\n" + attribute_changed_value_message
+          end
+
           Shoulda::Matchers.word_wrap(message)
         end
 
@@ -497,7 +501,21 @@ module Shoulda
             end
           end
 
+          if include_attribute_changed_value_message?
+            message << "\n\n" + attribute_changed_value_message
+          end
+
           Shoulda::Matchers.word_wrap(message)
+        end
+
+        def attribute_changed_value_message
+          <<-MESSAGE.strip
+As indicated in the message above, :#{result.attribute_setter.attribute_name}
+seems to be changing certain values as they are set, and this could have
+something to do with why this test is failing. If you've overridden the writer
+method for this attribute, then you may need to change it to make this test
+pass, or do something else entirely.
+          MESSAGE
         end
 
         def description
@@ -577,6 +595,11 @@ module Shoulda
               self,
               values_to_set.map { |value| [attribute_to_set, value] }
             )
+        end
+
+        def include_attribute_changed_value_message?
+          ignoring_interference_by_writer? &&
+            result.attribute_setter.attribute_changed_value?
         end
 
         def inspected_values_to_set

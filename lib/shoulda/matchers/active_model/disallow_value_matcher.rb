@@ -50,8 +50,8 @@ module Shoulda
           self
         end
 
-        def ignoring_interference_by_writer
-          allow_matcher.ignoring_interference_by_writer
+        def ignoring_interference_by_writer(value = true)
+          allow_matcher.ignoring_interference_by_writer(value)
           self
         end
 
