@@ -23,36 +23,86 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
     end
 
     context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher knows nothing of this' do
-        it 'raises a CouldNotSetAttributeError' do
-          record = build_record_validating_length(
+      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+        it 'raises an AttributeChangedValueError' do
+          model = define_model_validating_length(
             attribute_name: :name,
-            convert_attribute_with: :upcase,
             minimum: 4
           )
 
+          model.class_eval do
+            def name=(name)
+              super(name.upcase)
+            end
+          end
+
           assertion = lambda do
-            expect(record).to validate_length_of(:name).is_at_least(4)
+            expect(model.new).to validate_length_of(:name).is_at_least(4)
           end
 
           expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
           )
         end
       end
 
-      context 'and the matcher knows how given values get changed' do
-        it 'accepts (and not raise an error)' do
-          record = build_record_validating_length(
-            attribute_name: :name,
-            convert_attribute_with: :upcase,
-            minimum: 4
-          )
+      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+        context 'and the value change does not cause a test failure' do
+          it 'accepts (and does not raise an error)' do
+            model = define_model_validating_length(
+              attribute_name: :name,
+              minimum: 4
+            )
 
-          expect(record).
-            to validate_length_of(:name).
-            is_at_least(4).
-            converting_values("xxx" => "XXX", "xxxx" => "XXXX")
+            model.class_eval do
+              def name=(name)
+                super(name.upcase)
+              end
+            end
+
+            expect(model.new).
+              to validate_length_of(:name).
+              is_at_least(4).
+              ignoring_interference_by_writer
+          end
+        end
+
+        context 'and the value change causes a test failure' do
+          it 'lists how the value got changed in the failure message' do
+            model = define_model_validating_length(
+              attribute_name: :name,
+              minimum: 4
+            )
+
+            model.class_eval do
+              def name=(name)
+                super(name + 'j')
+              end
+            end
+
+            assertion = lambda do
+              expect(model.new).
+                to validate_length_of(:name).
+                is_at_least(4).
+                ignoring_interference_by_writer
+            end
+
+            message = <<-MESSAGE
+Example did not properly validate that the length of :name is at least
+4.
+  After setting :name to ‹"xxx"› -- which was read back as ‹"xxxj"› --
+  the matcher expected the Example to be invalid, but it was valid
+  instead.
+
+  As indicated in the message above, :name seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+            MESSAGE
+
+            expect(&assertion).to fail_with_message(message)
+          end
         end
       end
     end
@@ -62,43 +112,6 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
     it 'accepts ensuring the correct minimum length' do
       expect(validating_length(minimum: 0)).
         to validate_length_of(:attr).is_at_least(0)
-    end
-
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher knows nothing of this' do
-        it 'raises a CouldNotSetAttributeError' do
-          pending 'this should test that name accepts values > 0 length but does not'
-
-          record = build_record_validating_length(
-            attribute_name: :name,
-            convert_attribute_with: :upcase,
-            minimum: 0
-          )
-
-          assertion = lambda do
-            expect(record).to validate_length_of(:name).is_at_least(0)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
-          )
-        end
-      end
-
-      context 'and the matcher knows how given values get changed' do
-        it 'accepts (and not raise an error)' do
-          record = build_record_validating_length(
-            attribute_name: :name,
-            convert_attribute_with: :upcase,
-            minimum: 0
-          )
-
-          expect(record).
-            to validate_length_of(:name).
-            is_at_least(0).
-            converting_values("x" => "X")
-        end
-      end
     end
   end
 
@@ -124,36 +137,85 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
     end
 
     context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher knows nothing of this' do
-        it 'raises a CouldNotSetAttributeError' do
-          record = build_record_validating_length(
+      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+        it 'raises an AttributeChangedValueError' do
+          model = define_model_validating_length(
             attribute_name: :name,
-            convert_attribute_with: :upcase,
             maximum: 4
           )
 
+          model.class_eval do
+            def name=(name)
+              super(name.upcase)
+            end
+          end
+
           assertion = lambda do
-            expect(record).to validate_length_of(:name).is_at_most(4)
+            expect(model.new).to validate_length_of(:name).is_at_most(4)
           end
 
           expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
           )
         end
       end
 
-      context 'and the matcher knows how given values get changed' do
-        it 'accepts (and not raise an error)' do
-          record = build_record_validating_length(
-            attribute_name: :name,
-            convert_attribute_with: :upcase,
-            maximum: 4
-          )
+      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+        context 'and the value change does not cause a test failure' do
+          it 'accepts (and does not raise an error)' do
+            model = define_model_validating_length(
+              attribute_name: :name,
+              maximum: 4
+            )
 
-          expect(record).
-            to validate_length_of(:name).
-            is_at_most(4).
-            converting_values('xxxx' => 'XXXX', 'xxxxx' => 'XXXXX')
+            model.class_eval do
+              def name=(name)
+                super(name.upcase)
+              end
+            end
+
+            expect(model.new).
+              to validate_length_of(:name).
+              is_at_most(4).
+              ignoring_interference_by_writer
+          end
+        end
+
+        context 'and the value change causes a test failure' do
+          it 'lists how the value got changed in the failure message' do
+            model = define_model_validating_length(
+              attribute_name: :name,
+              maximum: 4
+            )
+
+            model.class_eval do
+              def name=(name)
+                super(name.chop)
+              end
+            end
+
+            assertion = lambda do
+              expect(model.new).
+                to validate_length_of(:name).
+                is_at_most(4).
+                ignoring_interference_by_writer
+            end
+
+            message = <<-MESSAGE
+Example did not properly validate that the length of :name is at most 4.
+  After setting :name to ‹"xxxxx"› -- which was read back as ‹"xxxx"› --
+  the matcher expected the Example to be invalid, but it was valid
+  instead.
+
+  As indicated in the message above, :name seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+            MESSAGE
+
+            expect(&assertion).to fail_with_message(message)
+          end
         end
       end
     end
@@ -180,41 +242,61 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
         to validate_length_of(:attr).is_equal_to(4).with_message(nil)
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher knows nothing of this' do
-        it 'raises a CouldNotSetAttributeError' do
-          record = build_record_validating_length(
+    context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+      context 'and the value change does not cause a test failure' do
+        it 'accepts (and does not raise an error)' do
+          model = define_model_validating_length(
             attribute_name: :name,
-            convert_attribute_with: :upcase,
             is: 4
           )
 
-          assertion = lambda do
-            expect(record).to validate_length_of(:name).is_equal_to(4)
+          model.class_eval do
+            def name=(name)
+              super(name.upcase)
+            end
           end
 
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::CouldNotSetAttributeError
-          )
+          expect(model.new).
+            to validate_length_of(:name).
+            is_equal_to(4).
+            ignoring_interference_by_writer
         end
       end
 
-      context 'and the matcher knows how given values get changed' do
-        it 'accepts (and not raise an error)' do
-          record = build_record_validating_length(
+      context 'and the value change causes a test failure' do
+        it 'lists how the value got changed in the failure message' do
+          model = define_model_validating_length(
             attribute_name: :name,
-            convert_attribute_with: :upcase,
             is: 4
           )
 
-          expect(record).
-            to validate_length_of(:name).
-            is_equal_to(4).
-            converting_values(
-              'xxx' => 'XXX',
-              'xxxx' => 'XXXX',
-              'xxxxx' => 'XXXXX'
-            )
+          model.class_eval do
+            def name=(name)
+              super(name + 'j')
+            end
+          end
+
+          assertion = lambda do
+            expect(model.new).
+              to validate_length_of(:name).
+              is_equal_to(4).
+              ignoring_interference_by_writer
+          end
+
+          message = <<-MESSAGE
+Example did not properly validate that the length of :name is 4.
+  After setting :name to ‹"xxx"› -- which was read back as ‹"xxxj"› --
+  the matcher expected the Example to be invalid, but it was valid
+  instead.
+
+  As indicated in the message above, :name seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+          MESSAGE
+
+          expect(&assertion).to fail_with_message(message)
         end
       end
     end
@@ -313,12 +395,6 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
 
     define_model(:example, attribute_name => :string) do |model|
       model.validates_length_of(attribute_name, options)
-
-      if options.key?(:convert_attribute_with)
-        model.send(:define_method, "#{attribute_name}=") do |value|
-          super(value.send(options[:convert_attribute_with]))
-        end
-      end
     end
   end
 
