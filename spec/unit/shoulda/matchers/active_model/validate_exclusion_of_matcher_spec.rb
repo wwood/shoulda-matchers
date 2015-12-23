@@ -16,6 +16,73 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
       expect(validating_exclusion(in: 2..5)).
         to validate_exclusion_of(:attr).in_range(2..5).with_message(nil)
     end
+
+    context 'when the writer method for the attribute changes incoming values' do
+      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+        it 'raises an AttributeChangedValueError' do
+          model = define_model_validating_exclusion(
+            attribute_name: :attr,
+            in: 2..5
+          )
+
+          model.class_eval do
+            def attr=(value)
+              super(value.next)
+            end
+          end
+
+          assertion = lambda do
+            expect(model.new).to validate_exclusion_of(:attr).in_range(2..5)
+          end
+
+          expect(&assertion).to raise_error(
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
+          )
+        end
+      end
+
+      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+        context 'and the value change causes a test failure' do
+          it 'lists how the value got changed in the failure message' do
+            model = define_model_validating_exclusion(
+              attribute_name: :attr,
+              in: 2..5
+            )
+
+            model.class_eval do
+              def attr=(value)
+                super(value.next)
+              end
+            end
+
+            assertion = lambda do
+              expect(model.new).
+                to validate_exclusion_of(:attr).
+                in_range(2..5).
+                ignoring_interference_by_writer
+            end
+
+            message = <<-MESSAGE
+Example did not properly validate that :attr lies outside the range ‹2›
+to ‹5›.
+  After setting :attr to ‹1› -- which was read back as ‹2› -- the
+  matcher expected the Example to be valid, but it was invalid instead,
+  producing these validation errors:
+
+  * attr: ["is reserved"]
+
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+            MESSAGE
+
+            expect(&assertion).to fail_with_message(message)
+          end
+        end
+      end
+    end
   end
 
   context 'an attribute which must be excluded from a range with excluded end' do
@@ -62,7 +129,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
       matcher = validate_exclusion_of(:attr).in_range(1..10)
 
       expect(matcher.description).to eq(
-        'validate that :attr lies outside the range 1..10'
+        'validate that :attr lies outside the range ‹1› to ‹10›'
       )
     end
   end
@@ -86,7 +153,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
     context 'when there is one value' do
       it 'has correct description' do
         expect(validate_exclusion_of(:attr).in_array([true]).description).
-          to eq 'validate that :attr is not true'
+          to eq 'validate that :attr is not ‹true›'
       end
     end
 
@@ -95,7 +162,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
         matcher = validate_exclusion_of(:attr).in_array([true, 'dog'])
 
         expect(matcher.description).to eq(
-          'validate that :attr is neither true nor "dog"'
+          'validate that :attr is neither ‹true› nor ‹"dog"›'
         )
       end
     end
@@ -105,8 +172,75 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
         matcher = validate_exclusion_of(:attr).in_array([true, 'dog', 'cat'])
 
         expect(matcher.description).to eq(
-          'validate that :attr is neither true, "dog", nor "cat"'
+          'validate that :attr is neither ‹true›, ‹"dog"›, nor ‹"cat"›'
         )
+      end
+    end
+
+    context 'when the writer method for the attribute changes incoming values' do
+      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
+        it 'raises an AttributeChangedValueError' do
+          model = define_model_validating_exclusion(
+            attribute_name: :attr,
+            in: ['one', 'two']
+          )
+
+          model.class_eval do
+            def attr=(value)
+              super(value.next)
+            end
+          end
+
+          assertion = lambda do
+            expect(model.new).
+              to validate_exclusion_of(:attr).
+              in_array(['one', 'two'])
+          end
+
+          expect(&assertion).to raise_error(
+            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
+          )
+        end
+      end
+
+      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
+        context 'and the value change causes a test failure' do
+          it 'lists how the value got changed in the failure message' do
+            model = define_model_validating_exclusion(
+              attribute_name: :attr,
+              in: ['one', 'two']
+            )
+
+            model.class_eval do
+              def attr=(value)
+                super(value.next)
+              end
+            end
+
+            assertion = lambda do
+              expect(model.new).
+                to validate_exclusion_of(:attr).
+                in_array(['one', 'two']).
+                ignoring_interference_by_writer
+            end
+
+            message = <<-MESSAGE
+Example did not properly validate that :attr is neither ‹"one"› nor
+‹"two"›.
+  After setting :attr to ‹"one"› -- which was read back as ‹"onf"› --
+  the matcher expected the Example to be invalid, but it was valid
+  instead.
+
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+            MESSAGE
+
+            expect(&assertion).to fail_with_message(message)
+          end
+        end
       end
     end
 
