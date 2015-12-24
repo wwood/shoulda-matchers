@@ -77,6 +77,10 @@ module UnitTests
         else
           value + 1
         end
+      when :never_falsy
+        value || 'something different'
+      when :always_nil
+        nil
       else
         value.public_send(value_changer)
       end

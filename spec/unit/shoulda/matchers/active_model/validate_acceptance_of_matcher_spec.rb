@@ -9,6 +9,32 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
     it 'does not overwrite the default message with nil' do
       expect(record_validating_acceptance).to matcher.with_message(nil)
     end
+
+    it_supports 'ignoring_interference_by_writer', {
+      raise_if_not_qualified: {
+        changing_values_with: :never_falsy,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: :never_falsy,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        attribute_name: :attr,
+        changing_values_with: :always_nil,
+        expected_message: <<-MESSAGE
+Example did not properly validate that :attr has been set to "1".
+  After setting :attr to ‹false› -- which was read back as ‹nil› -- the
+  matcher expected the Example to be invalid, but it was valid instead.
+
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+        MESSAGE
+      },
+      model_creator: UnitTests::ActiveModel::CreateModel
+    }
   end
 
   context 'a model without an acceptance validation' do
@@ -26,99 +52,6 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
     it 'rejects when the message does not match' do
       expect(record_validating_acceptance(message: 'custom')).
         not_to matcher.with_message(/wrong/)
-    end
-  end
-
-  context 'when the writer method for the attribute changes incoming values' do
-    context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-      it 'raises an AttributeChangedValueError' do
-        model = define_model_validating_acceptance(
-          attribute_name: :terms_of_service
-        )
-
-        model.class_eval do
-          undef_method :terms_of_service=
-
-          def terms_of_service=(value)
-            if value
-              @terms_of_service = value
-            else
-              @terms_of_service = "something different"
-            end
-          end
-        end
-
-        assertion = lambda do
-          expect(model.new).to validate_acceptance_of(:terms_of_service)
-        end
-
-        expect(&assertion).to raise_error(
-          Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-        )
-      end
-    end
-
-    context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-      context 'and the value change does not cause a test failure' do
-        it 'accepts (and does not raise an error)' do
-          model = define_model_validating_acceptance(
-            attribute_name: :terms_of_service
-          )
-
-          model.class_eval do
-            undef_method :terms_of_service=
-
-            def terms_of_service=(value)
-              if value
-                @terms_of_service = value
-              else
-                @terms_of_service = "something different"
-              end
-            end
-          end
-
-          expect(model.new).
-            to validate_acceptance_of(:terms_of_service).
-            ignoring_interference_by_writer
-        end
-      end
-
-      context 'and the value change causes a test failure' do
-        it 'lists how the value got changed in the failure message' do
-          model = define_model_validating_acceptance(
-            attribute_name: :terms_of_service
-          )
-
-          model.class_eval do
-            undef_method :terms_of_service=
-
-            def terms_of_service=(value)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).
-              to validate_acceptance_of(:terms_of_service).
-              ignoring_interference_by_writer
-          end
-
-          message = <<-MESSAGE
-Example did not properly validate that :terms_of_service has been set to
-"1".
-  After setting :terms_of_service to false -- which was read back as nil
-  -- the matcher expected the Example to be invalid, but it was valid
-  instead.
-
-  As indicated in the message above, :terms_of_service seems to be
-  changing certain values as they are set, and this could have something
-  to do with why this test is failing. If you've overridden the writer
-  method for this attribute, then you may need to change it to make this
-  test pass, or do something else entirely.
-          MESSAGE
-
-          expect(&assertion).to fail_with_message(message)
-        end
-      end
     end
   end
 
@@ -151,4 +84,8 @@ Example did not properly validate that :terms_of_service has been set to
 
   alias_method :build_record_validating_acceptance,
     :record_validating_acceptance
+
+  def matcher_name
+    :validate_acceptance_of
+  end
 end
