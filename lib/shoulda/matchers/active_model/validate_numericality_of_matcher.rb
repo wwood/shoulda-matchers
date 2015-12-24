@@ -445,7 +445,7 @@ module Shoulda
         end
 
         def failure_message
-          "#{overall_failure_message}".tap do |message|
+          overall_failure_message.dup.tap do |message|
             failing_submatchers.each do |submatcher|
               if number_of_submatchers_for_failure_message > 1
                 submatcher_description = submatcher.simple_description.
@@ -470,7 +470,7 @@ module Shoulda
         end
 
         def failure_message_when_negated
-          "#{overall_failure_message_when_negated}".tap do |message|
+          overall_failure_message_when_negated.dup.tap do |message|
             if submatcher_failure_message_when_negated.present?
               raise "hmm, this needs to be implemented."
               message << "\n"

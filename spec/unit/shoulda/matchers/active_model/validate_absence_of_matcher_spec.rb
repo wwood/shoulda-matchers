@@ -32,6 +32,17 @@ describe Shoulda::Matchers::ActiveModel::ValidateAbsenceOfMatcher, type: :model 
             expect(validating_absence_of(:attr, {}, type: type)).
               to validate_absence_of(:attr)
           end
+
+          it_supports 'ignoring_interference_by_writer', {
+            raise_if_not_qualified: {
+              changing_values_with: :next_value
+            },
+            accept_if_qualified_but_changing_value_interferes: {
+              changing_values_with: :next_value
+            },
+            model_creator: UnitTests::ActiveRecord::CreateModel,
+            column_type: type
+          }
         end
       end
     end
@@ -62,6 +73,16 @@ Example did not properly validate that :attr is empty/falsy.
       it 'does not override the default message with a blank' do
         expect(active_model_validating_absence_of(:attr)).to validate_absence_of(:attr).with_message(nil)
       end
+
+      it_supports 'ignoring_interference_by_writer', {
+        raise_if_not_qualified: {
+          changing_values_with: :upcase
+        },
+        accept_if_qualified_but_changing_value_interferes: {
+          changing_values_with: :upcase
+        },
+        model_creator: UnitTests::ActiveModel::CreateModel,
+      }
     end
 
     context 'an ActiveModel class without an absence validation' do
@@ -73,7 +94,7 @@ Example did not properly validate that :attr is empty/falsy.
         MESSAGE
 
         assertion = lambda do
-           expect(active_model_with(:attr)).to validate_absence_of(:attr)
+          expect(active_model_with(:attr)).to validate_absence_of(:attr)
         end
 
         expect(&assertion).to fail_with_message(message)
@@ -84,6 +105,16 @@ Example did not properly validate that :attr is empty/falsy.
       it 'requires the attribute to not be set' do
         expect(having_many(:children, absence: true)).to validate_absence_of(:children)
       end
+
+      it_supports 'ignoring_interference_by_writer', {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value
+        },
+        accept_if_qualified_but_changing_value_interferes: {
+          changing_values_with: :next_value
+        },
+        model_creator: UnitTests::ActiveRecord::CreateModelWithHasMany
+      }
     end
 
     context 'a has_many association without an absence validation' do
@@ -98,6 +129,16 @@ Example did not properly validate that :attr is empty/falsy.
         model = having_and_belonging_to_many(:children, absence: true)
         expect(model).to validate_absence_of(:children)
       end
+
+      it_supports 'ignoring_interference_by_writer', {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value
+        },
+        accept_if_qualified_but_changing_value_interferes: {
+          changing_values_with: :next_value
+        },
+        model_creator: UnitTests::ActiveRecord::CreateModelWithHabtm
+      }
     end
 
     context 'a non-absent has_and_belongs_to_many association' do
@@ -141,44 +182,6 @@ Parent did not properly validate that :children is empty/falsy.
       context "with the validation context" do
         it "matches" do
           expect(validating_absence_of(:attr, on: :customisable)).to validate_absence_of(:attr).on(:customisable)
-        end
-      end
-    end
-
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          model = define_model_validating_absence_of(:name)
-
-          model.class_eval do
-            def name=(name)
-              super(name.upcase)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).to validate_absence_of(:name)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change does not cause a test failure' do
-          it 'does not raise a CouldNotSetAttributeError' do
-            model = define_model_validating_absence_of(:name) do
-              def name=(name)
-                super(name.upcase)
-              end
-            end
-
-            expect(model.new).
-              to validate_absence_of(:name).
-              ignoring_interference_by_writer
-          end
         end
       end
     end
@@ -239,6 +242,10 @@ Parent did not properly validate that :children is empty/falsy.
           validates_absence_of plural_name
         end
       end.new
+    end
+
+    def matcher_name
+      :validate_absence_of
     end
   end
 end

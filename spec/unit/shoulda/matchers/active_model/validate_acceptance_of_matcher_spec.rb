@@ -60,7 +60,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
 
     context 'and the matcher has been qualified with ignoring_interference_by_writer' do
       context 'and the value change does not cause a test failure' do
-        it 'accepts (and not raise an error)' do
+        it 'accepts (and does not raise an error)' do
           model = define_model_validating_acceptance(
             attribute_name: :terms_of_service
           )
@@ -81,27 +81,28 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
             to validate_acceptance_of(:terms_of_service).
             ignoring_interference_by_writer
         end
+      end
 
-        context 'and the value change causes a test failure' do
-          it 'lists how the value got changed in the failure message' do
-            model = define_model_validating_acceptance(
-              attribute_name: :terms_of_service
-            )
+      context 'and the value change causes a test failure' do
+        it 'lists how the value got changed in the failure message' do
+          model = define_model_validating_acceptance(
+            attribute_name: :terms_of_service
+          )
 
-            model.class_eval do
-              undef_method :terms_of_service=
+          model.class_eval do
+            undef_method :terms_of_service=
 
-              def terms_of_service=(value)
-              end
+            def terms_of_service=(value)
             end
+          end
 
-            assertion = lambda do
-              expect(model.new).
-                to validate_acceptance_of(:terms_of_service).
-                ignoring_interference_by_writer
-            end
+          assertion = lambda do
+            expect(model.new).
+              to validate_acceptance_of(:terms_of_service).
+              ignoring_interference_by_writer
+          end
 
-            message = <<-MESSAGE
+          message = <<-MESSAGE
 Example did not properly validate that :terms_of_service has been set to
 "1".
   After setting :terms_of_service to false -- which was read back as nil
@@ -113,10 +114,9 @@ Example did not properly validate that :terms_of_service has been set to
   to do with why this test is failing. If you've overridden the writer
   method for this attribute, then you may need to change it to make this
   test pass, or do something else entirely.
-            MESSAGE
+          MESSAGE
 
-            expect(&assertion).to fail_with_message(message)
-          end
+          expect(&assertion).to fail_with_message(message)
         end
       end
     end
