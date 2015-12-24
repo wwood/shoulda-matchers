@@ -17,52 +17,15 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
         to validate_exclusion_of(:attr).in_range(2..5).with_message(nil)
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          model = define_model_validating_exclusion(
-            attribute_name: :attr,
-            in: 2..5
-          )
-
-          model.class_eval do
-            def attr=(value)
-              super(value.next)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).to validate_exclusion_of(:attr).in_range(2..5)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change causes a test failure' do
-          it 'lists how the value got changed in the failure message' do
-            model = define_model_validating_exclusion(
-              attribute_name: :attr,
-              in: 2..5
-            )
-
-            model.class_eval do
-              def attr=(value)
-                super(value.next)
-              end
-            end
-
-            assertion = lambda do
-              expect(model.new).
-                to validate_exclusion_of(:attr).
-                in_range(2..5).
-                ignoring_interference_by_writer
-            end
-
-            message = <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        changing_values_with: :next_value,
+        expected_message: <<-MESSAGE
 Example did not properly validate that :attr lies outside the range ‹2›
 to ‹5›.
   After setting :attr to ‹1› -- which was read back as ‹2› -- the
@@ -76,11 +39,16 @@ to ‹5›.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-            MESSAGE
+        MESSAGE
+      },
+      model_creator: UnitTests::ActiveModel::CreateModel
+    ) do
+      def validation_options
+        { in: 2..5 }
+      end
 
-            expect(&assertion).to fail_with_message(message)
-          end
-        end
+      def configure_matcher(matcher)
+        matcher.in_range(2..5)
       end
     end
   end
@@ -177,54 +145,15 @@ to ‹5›.
       end
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          model = define_model_validating_exclusion(
-            attribute_name: :attr,
-            in: ['one', 'two']
-          )
-
-          model.class_eval do
-            def attr=(value)
-              super(value.next)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).
-              to validate_exclusion_of(:attr).
-              in_array(['one', 'two'])
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change causes a test failure' do
-          it 'lists how the value got changed in the failure message' do
-            model = define_model_validating_exclusion(
-              attribute_name: :attr,
-              in: ['one', 'two']
-            )
-
-            model.class_eval do
-              def attr=(value)
-                super(value.next)
-              end
-            end
-
-            assertion = lambda do
-              expect(model.new).
-                to validate_exclusion_of(:attr).
-                in_array(['one', 'two']).
-                ignoring_interference_by_writer
-            end
-
-            message = <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        changing_values_with: :next_value,
+        expected_message: <<-MESSAGE
 Example did not properly validate that :attr is neither ‹"one"› nor
 ‹"two"›.
   After setting :attr to ‹"one"› -- which was read back as ‹"onf"› --
@@ -236,11 +165,16 @@ Example did not properly validate that :attr is neither ‹"one"› nor
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-            MESSAGE
+        MESSAGE
+      },
+      model_creator: UnitTests::ActiveModel::CreateModel
+    ) do
+      def validation_options
+        { in: ['one', 'two'] }
+      end
 
-            expect(&assertion).to fail_with_message(message)
-          end
-        end
+      def configure_matcher(matcher)
+        matcher.in_array(['one', 'two'])
       end
     end
 
@@ -266,4 +200,8 @@ Example did not properly validate that :attr is neither ‹"one"› nor
   end
 
   alias_method :build_record_validating_exclusion, :validating_exclusion
+
+  def matcher_name
+    :validate_exclusion_of
+  end
 end

@@ -1,26 +1,18 @@
-shared_examples_for 'ignoring_interference_by_writer' do |config|
-  model_creator = config.fetch(
-    :model_creator,
-    UnitTests::ActiveRecord::CreateModel
-  )
-  column_type = config.fetch(:column_type, :string)
+shared_examples_for 'ignoring_interference_by_writer' do |common_config|
+  define_method(:common_config) { common_config }
 
   context 'when the writer method for the attribute changes incoming values' do
     context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-      local_config = config[:raise_if_not_qualified]
+      config_for_test = common_config[:raise_if_not_qualified]
 
-      if local_config
+      if config_for_test
         it 'raises an AttributeChangedValueError' do
-          builder = build_scenario_for_validation_matcher(
-            model_creator: model_creator,
-            column_type: column_type,
-            model_options: {
-              changing_values_with: local_config.fetch(:changing_values_with)
-            }
-          )
+          args = build_args(config_for_test)
+          builder = build_scenario_for_validation_matcher(args)
+          matcher = matcher_from(builder)
 
           assertion = lambda do
-            expect(builder.record).to builder.matcher
+            expect(builder.record).to matcher
           end
 
           expect(&assertion).to raise_error(
@@ -32,53 +24,70 @@ shared_examples_for 'ignoring_interference_by_writer' do |config|
 
     context 'and the matcher has been qualified with ignoring_interference_by_writer' do
       context 'and the value change does not cause a test failure' do
-        local_config = config[:accept_if_qualified_but_changing_value_does_not_interfere]
+        config_for_test = common_config[:accept_if_qualified_but_changing_value_does_not_interfere]
 
-        if local_config
+        if config_for_test
           it 'accepts (and does not raise an error)' do
-            builder = build_scenario_for_validation_matcher(
-              model_creator: model_creator,
-              column_type: column_type,
-              model_options: {
-                changing_values_with: local_config.fetch(:changing_values_with)
-              }
-            )
+            args = build_args(config_for_test)
+            builder = build_scenario_for_validation_matcher(args)
+            matcher = matcher_from(builder)
 
-            expect(builder.record).
-              to builder.matcher.ignoring_interference_by_writer
+            expect(builder.record).to matcher.ignoring_interference_by_writer
           end
         end
       end
 
       context 'and the value change causes a test failure' do
-        local_config = config[:reject_if_qualified_but_changing_value_interferes]
+        config_for_test = common_config[:reject_if_qualified_but_changing_value_interferes]
 
-        if local_config
+        if config_for_test
           it 'lists how the value got changed in the failure message' do
-            builder_args = {
-              model_creator: model_creator,
-              column_type: column_type,
-              model_options: {
-                changing_values_with: local_config.fetch(:changing_values_with)
-              }
-            }
-
-            builder_args.merge!(
-              local_config.slice(:model_name, :attribute_name)
-            )
-
-            builder = build_scenario_for_validation_matcher(builder_args)
+            args = build_args(config_for_test)
+            builder = build_scenario_for_validation_matcher(args)
+            matcher = matcher_from(builder)
+            message = config_for_test.fetch(:expected_message)
 
             assertion = lambda do
-              expect(builder.record).
-                to builder.matcher.ignoring_interference_by_writer
+              expect(builder.record).to matcher.ignoring_interference_by_writer
             end
-
-            message = local_config.fetch(:expected_message)
 
             expect(&assertion).to fail_with_message(message)
           end
         end
+      end
+    end
+  end
+
+  def model_creator
+    common_config.fetch(:model_creator, UnitTests::ActiveRecord::CreateModel)
+  end
+
+  def column_type
+    common_config.fetch(:column_type, :string)
+  end
+
+  def build_args(config_for_test)
+    args = {
+      model_creator: model_creator,
+      column_type: column_type,
+      model_options: {
+        changing_values_with: config_for_test.fetch(:changing_values_with)
+      }
+    }
+
+    args.merge!(config_for_test.slice(:model_name, :attribute_name))
+
+    if respond_to?(:validation_options)
+      args[:validation_options] = validation_options
+    end
+
+    args
+  end
+
+  def matcher_from(builder)
+    builder.matcher.tap do |matcher|
+      if respond_to?(:configure_matcher)
+        configure_matcher(matcher)
       end
     end
   end
