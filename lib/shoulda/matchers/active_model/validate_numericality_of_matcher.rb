@@ -465,6 +465,7 @@ module Shoulda
                 submatcher_message,
                 indent: 2
               )
+              message << "\n"
             end
           end
         end
