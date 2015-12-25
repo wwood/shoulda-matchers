@@ -18,7 +18,6 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
           matches_or_not.reverse!
           to_or_not_to.reverse!
         end
-
       end
     end
 
@@ -228,6 +227,35 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
         end
       end
     end
+
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: -> (value) { value || valid_values.first }
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        attribute_name: :attr,
+        changing_values_with: :never_falsy,
+        expected_message_includes: <<-MESSAGE.strip
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+        MESSAGE
+      }
+    )
+
+    def validation_options
+      super.merge(allow_nil: true)
+    end
+
+    def configure_matcher(matcher)
+      super(matcher).allow_nil
+    end
   end
 
   shared_examples_for 'it supports allow_blank' do |args|
@@ -252,6 +280,37 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
           matcher.allow_blank(*option_args)
         end
       end
+    end
+
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: -> (value) {
+          value.presence || valid_values.first
+        }
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        attribute_name: :attr,
+        changing_values_with: :never_blank,
+        expected_message_includes: <<-MESSAGE.strip
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+        MESSAGE
+      }
+    )
+
+    def validation_options
+      super.merge(allow_blank: true)
+    end
+
+    def configure_matcher(matcher)
+      super(matcher).allow_blank
     end
   end
 
@@ -338,6 +397,8 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
     zero = args[:zero]
     reserved_outside_value = args.fetch(:reserved_outside_value)
 
+    define_method(:valid_values) { args.fetch(:possible_values) }
+
     it 'does not match a record with no validations' do
       builder = build_object
       expect_not_to_match_on_values(builder, possible_values)
@@ -417,73 +478,23 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       end
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          builder = build_object_allowing(
-            possible_values,
-            attribute_name: :attr,
-            customize_model_class: -> (model) {
-              define_method(:attr=) do |value|
-                if value
-                  if value.respond_to?(:next)
-                    super(value.next)
-                  else
-                    super(value + 1)
-                  end
-                end
-              end
-            }
-          )
-
-          assertion = lambda do
-            expect_to_match_on_values(builder, possible_values)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change causes a test failure' do
-          it 'includes a note about it in the failure message' do
-            builder = build_object_allowing(
-              possible_values,
-              attribute_name: :attr,
-              customize_model_class: -> (model) {
-                define_method(:attr=) do |value|
-                  if value
-                    if value.respond_to?(:next)
-                      super(value.next)
-                    else
-                      super(value + 1)
-                    end
-                  end
-                end
-              }
-            )
-
-            assertion = lambda do
-              expect_to_match_on_values(builder, possible_values) do |matcher|
-                matcher.ignoring_interference_by_writer
-              end
-            end
-
-            message = <<-MESSAGE.rstrip
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        attribute_name: :attr,
+        changing_values_with: :next_value,
+        expected_message_includes: <<-MESSAGE.strip
   As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-            MESSAGE
-
-            expect(&assertion).to fail_with_message_including(message)
-          end
-        end
-      end
-    end
+        MESSAGE
+      }
+    )
 
     def expect_to_match_on_values(builder, values, &block)
       expect_to_match_in_array(builder, values, &block)
@@ -492,10 +503,20 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
     def expect_not_to_match_on_values(builder, values, &block)
       expect_not_to_match_in_array(builder, values, &block)
     end
+
+    def validation_options
+      super.merge(in: valid_values)
+    end
+
+    def configure_matcher(matcher)
+      super(matcher).in_array(valid_values)
+    end
   end
 
   shared_examples_for 'it supports in_range' do |args|
     possible_values = args[:possible_values]
+
+    define_method(:valid_values) { args.fetch(:possible_values) }
 
     it 'does not match a record with no validations' do
       builder = build_object
@@ -578,12 +599,38 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       end
     end
 
+    it_supports(
+      'ignoring_interference_by_writer',
+      raise_if_not_qualified: {
+        changing_values_with: :next_value,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        attribute_name: :attr,
+        changing_values_with: :next_value,
+        expected_message_includes: <<-MESSAGE.strip
+  As indicated in the message above, :attr seems to be changing certain
+  values as they are set, and this could have something to do with why
+  this test is failing. If you've overridden the writer method for this
+  attribute, then you may need to change it to make this test pass, or
+  do something else entirely.
+        MESSAGE
+      }
+    )
+
     def expect_to_match_on_values(builder, range, &block)
       expect_to_match_in_range(builder, range, &block)
     end
 
     def expect_not_to_match_on_values(builder, range, &block)
       expect_not_to_match_in_range(builder, range, &block)
+    end
+
+    def validation_options
+      super.merge(in: valid_values)
+    end
+
+    def configure_matcher(matcher)
+      super(matcher).in_range(valid_values)
     end
   end
 
@@ -716,6 +763,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
     def define_simple_model(attribute_name: :attr, column_options: {}, &block)
       define_model('Example', attribute_name => column_options, &block)
     end
+
+    def model_creator_strategy
+      UnitTests::ActiveRecord::CreateModel
+    end
   end
 
   context 'for a plain Ruby attribute' do
@@ -739,6 +790,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
     def define_simple_model(attribute_name: :attr, column_options: {}, &block)
       define_active_model_class('Example', accessors: [attribute_name], &block)
+    end
+
+    def model_creator_strategy
+      UnitTests::ActiveModel::CreateModel
     end
   end
 
@@ -909,5 +964,17 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
         with_low_message(low_message).
         with_high_message(high_message)
     end
+  end
+
+  def validation_options
+    {}
+  end
+
+  def configure_matcher(matcher)
+    matcher
+  end
+
+  def matcher_name
+    :validate_inclusion_of
   end
 end

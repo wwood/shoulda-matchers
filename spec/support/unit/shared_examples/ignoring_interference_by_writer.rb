@@ -45,21 +45,22 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
             args = build_args(config_for_test)
             builder = build_scenario_for_validation_matcher(args)
             matcher = matcher_from(builder)
-            message = config_for_test.fetch(:expected_message)
 
             assertion = lambda do
               expect(builder.record).to matcher.ignoring_interference_by_writer
             end
 
-            expect(&assertion).to fail_with_message(message)
+            if config_for_test.key?(:expected_message_includes)
+              message = config_for_test[:expected_message_includes]
+              expect(&assertion).to fail_with_message_including(message)
+            else
+              message = config_for_test[:expected_message]
+              expect(&assertion).to fail_with_message(message)
+            end
           end
         end
       end
     end
-  end
-
-  def model_creator
-    common_config.fetch(:model_creator, UnitTests::ActiveRecord::CreateModel)
   end
 
   def column_type
@@ -68,13 +69,12 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
 
   def build_args(config_for_test)
     args = {
-      model_creator: model_creator,
-      column_type: column_type,
       model_options: {
         changing_values_with: config_for_test.fetch(:changing_values_with)
       }
     }
 
+    args.merge!(common_config.slice(:model_creator, :column_type))
     args.merge!(config_for_test.slice(:model_name, :attribute_name))
 
     if respond_to?(:validation_options)

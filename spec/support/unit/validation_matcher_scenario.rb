@@ -8,7 +8,11 @@ module UnitTests
     end
 
     def record
-      model.new
+      if args.key?(:build_scenario_object)
+        args[:build_scenario_object].call(args)
+      else
+        model.new
+      end
     end
 
     def model
