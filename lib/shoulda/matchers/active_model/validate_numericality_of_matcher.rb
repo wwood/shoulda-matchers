@@ -319,8 +319,6 @@ module Shoulda
           @expects_strict = false
           @allowed_type_adjective = nil
           @allowed_type_name = 'number'
-
-          add_disallow_value_matcher
         end
 
         def strict
