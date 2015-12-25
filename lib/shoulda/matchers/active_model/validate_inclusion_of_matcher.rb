@@ -390,14 +390,16 @@ EOT
           disallows_lower_value &&
             allows_minimum_value &&
             disallows_higher_value &&
-            allows_maximum_value
+            allows_maximum_value &&
+            allows_blank_value? &&
+            allows_nil_value?
         end
 
         def matches_for_array?
           allows_all_values_in_array? &&
+            disallows_value_outside_of_array? &&
             allows_blank_value? &&
-            allows_nil_value? &&
-            disallows_value_outside_of_array?
+            allows_nil_value?
         end
 
         def allows_blank_value?
