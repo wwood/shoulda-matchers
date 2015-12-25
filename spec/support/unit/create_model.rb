@@ -8,31 +8,42 @@ module UnitTests
     DEFAULT_ATTRIBUTE_NAME = :attr
     DEFAULT_COLUMN_TYPE = :string
 
-    def initialize(args)
+    def initialize(args, &model_customizer)
       @args = args
+      @model_customizer = model_customizer
     end
 
     def call
-      model_customizer = lambda do |m|
-        m.public_send(validation_name, attribute_name, validation_options)
-      end
-
-      model = model_creation_strategy.call(
+      model_creator = model_creation_strategy.new(
         model_name,
         columns,
         attribute_name: attribute_name,
         &model_customizer
       )
 
-      _change_value = method(:change_value)
+      model_creator.customize_model do |model|
+        if model_options[:custom_validation]
+          _attribute_name = attribute_name
 
-      if model_options.key?(:changing_values_with)
-        model.send(:define_method, "#{attribute_name}=") do |value|
-          super(_change_value.call(value))
+          model.send(:define_method, :custom_validation) do
+            custom_validation.call(self, _attribute_name)
+          end
+
+          model.validate(:custom_validation)
+        else
+          model.public_send(validation_name, attribute_name, validation_options)
+        end
+
+        if model_options.key?(:changing_values_with)
+          _change_value = method(:change_value)
+
+          model.send(:define_method, "#{attribute_name}=") do |value|
+            super(_change_value.call(value))
+          end
         end
       end
 
-      model
+      model_creator.call
     end
 
     def model_name
@@ -45,7 +56,7 @@ module UnitTests
 
     protected
 
-    attr_reader :args
+    attr_reader :args, :model_customizer
 
     private
 
@@ -54,7 +65,7 @@ module UnitTests
     end
 
     def columns
-      { column_name => column_type }
+      { column_name => column_options.merge(type: column_type) }
     end
 
     def model_options
@@ -79,6 +90,8 @@ module UnitTests
         end
       when :never_falsy
         value || 'something different'
+      when :never_blank
+        value.presence || 'something different'
       when :always_nil
         nil
       else
@@ -92,6 +105,10 @@ module UnitTests
 
     def column_type
       args.fetch(:column_type, DEFAULT_COLUMN_TYPE)
+    end
+
+    def column_options
+      args.fetch(:column_options, {})
     end
 
     def validation_name

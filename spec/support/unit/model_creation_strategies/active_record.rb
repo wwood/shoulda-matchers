@@ -38,19 +38,23 @@ module UnitTests
         model = UnitTests::ModelBuilder.define_model_class(class_name, &block)
 
         model_customizers.each do |block|
-          if block
-            if block.arity == 0
-              model.class_eval(&block)
-            else
-              block.call(model)
-            end
-          end
+          run_block(model, block)
         end
 
         model.attr_accessible(*columns.keys)
         model.table_name = table_name
 
         model
+      end
+
+      def run_block(model, block)
+        if block
+          if block.arity == 0
+            model.class_eval(&block)
+          else
+            block.call(model)
+          end
+        end
       end
 
       def class_name
