@@ -22,88 +22,38 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
         to validate_length_of(:attr).is_at_least(4).with_short_message(nil)
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          model = define_model_validating_length(
-            attribute_name: :name,
-            minimum: 4
-          )
-
-          model.class_eval do
-            def name=(name)
-              super(name.upcase)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).to validate_length_of(:name).is_at_least(4)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change does not cause a test failure' do
-          it 'accepts (and does not raise an error)' do
-            model = define_model_validating_length(
-              attribute_name: :name,
-              minimum: 4
-            )
-
-            model.class_eval do
-              def name=(name)
-                super(name.upcase)
-              end
-            end
-
-            expect(model.new).
-              to validate_length_of(:name).
-              is_at_least(4).
-              ignoring_interference_by_writer
-          end
-        end
-
-        context 'and the value change causes a test failure' do
-          it 'lists how the value got changed in the failure message' do
-            model = define_model_validating_length(
-              attribute_name: :name,
-              minimum: 4
-            )
-
-            model.class_eval do
-              def name=(name)
-                super(name + 'j')
-              end
-            end
-
-            assertion = lambda do
-              expect(model.new).
-                to validate_length_of(:name).
-                is_at_least(4).
-                ignoring_interference_by_writer
-            end
-
-            message = <<-MESSAGE
-Example did not properly validate that the length of :name is at least
+    it_supports('ignoring_interference_by_writer', {
+      raise_if_not_qualified: {
+        changing_values_with: :upcase,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: :upcase,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        attribute_name: :attr,
+        changing_values_with: :add_character,
+        expected_message: <<-MESSAGE
+Example did not properly validate that the length of :attr is at least
 4.
-  After setting :name to ‹"xxx"› -- which was read back as ‹"xxxj"› --
+  After setting :attr to ‹"xxx"› -- which was read back as ‹"xxxa"› --
   the matcher expected the Example to be invalid, but it was valid
   instead.
 
-  As indicated in the message above, :name seems to be changing certain
+  As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-            MESSAGE
+        MESSAGE
+      }
+    }) do
+      def validation_options
+        { minimum: 4 }
+      end
 
-            expect(&assertion).to fail_with_message(message)
-          end
-        end
+      def configure_matcher(matcher)
+        matcher.is_at_least(4)
       end
     end
   end
@@ -136,87 +86,37 @@ Example did not properly validate that the length of :name is at least
         to validate_length_of(:attr).is_at_most(4).with_long_message(nil)
     end
 
-    context 'when the writer method for the attribute changes incoming values' do
-      context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-        it 'raises an AttributeChangedValueError' do
-          model = define_model_validating_length(
-            attribute_name: :name,
-            maximum: 4
-          )
-
-          model.class_eval do
-            def name=(name)
-              super(name.upcase)
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).to validate_length_of(:name).is_at_most(4)
-          end
-
-          expect(&assertion).to raise_error(
-            Shoulda::Matchers::ActiveModel::AllowValueMatcher::AttributeChangedValueError
-          )
-        end
-      end
-
-      context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-        context 'and the value change does not cause a test failure' do
-          it 'accepts (and does not raise an error)' do
-            model = define_model_validating_length(
-              attribute_name: :name,
-              maximum: 4
-            )
-
-            model.class_eval do
-              def name=(name)
-                super(name.upcase)
-              end
-            end
-
-            expect(model.new).
-              to validate_length_of(:name).
-              is_at_most(4).
-              ignoring_interference_by_writer
-          end
-        end
-
-        context 'and the value change causes a test failure' do
-          it 'lists how the value got changed in the failure message' do
-            model = define_model_validating_length(
-              attribute_name: :name,
-              maximum: 4
-            )
-
-            model.class_eval do
-              def name=(name)
-                super(name.chop)
-              end
-            end
-
-            assertion = lambda do
-              expect(model.new).
-                to validate_length_of(:name).
-                is_at_most(4).
-                ignoring_interference_by_writer
-            end
-
-            message = <<-MESSAGE
-Example did not properly validate that the length of :name is at most 4.
-  After setting :name to ‹"xxxxx"› -- which was read back as ‹"xxxx"› --
+    it_supports('ignoring_interference_by_writer', {
+      raise_if_not_qualified: {
+        changing_values_with: :upcase,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: :upcase,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        attribute_name: :attr,
+        changing_values_with: :remove_character,
+        expected_message: <<-MESSAGE
+Example did not properly validate that the length of :attr is at most 4.
+  After setting :attr to ‹"xxxxx"› -- which was read back as ‹"xxxx"› --
   the matcher expected the Example to be invalid, but it was valid
   instead.
 
-  As indicated in the message above, :name seems to be changing certain
+  As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-            MESSAGE
+        MESSAGE
+      }
+    }) do
+      def validation_options
+        { maximum: 4 }
+      end
 
-            expect(&assertion).to fail_with_message(message)
-          end
-        end
+      def configure_matcher(matcher)
+        matcher.is_at_most(4)
       end
     end
   end
@@ -242,62 +142,37 @@ Example did not properly validate that the length of :name is at most 4.
         to validate_length_of(:attr).is_equal_to(4).with_message(nil)
     end
 
-    context 'and the matcher has been qualified with ignoring_interference_by_writer' do
-      context 'and the value change does not cause a test failure' do
-        it 'accepts (and does not raise an error)' do
-          model = define_model_validating_length(
-            attribute_name: :name,
-            is: 4
-          )
-
-          model.class_eval do
-            def name=(name)
-              super(name.upcase)
-            end
-          end
-
-          expect(model.new).
-            to validate_length_of(:name).
-            is_equal_to(4).
-            ignoring_interference_by_writer
-        end
-      end
-
-      context 'and the value change causes a test failure' do
-        it 'lists how the value got changed in the failure message' do
-          model = define_model_validating_length(
-            attribute_name: :name,
-            is: 4
-          )
-
-          model.class_eval do
-            def name=(name)
-              super(name + 'j')
-            end
-          end
-
-          assertion = lambda do
-            expect(model.new).
-              to validate_length_of(:name).
-              is_equal_to(4).
-              ignoring_interference_by_writer
-          end
-
-          message = <<-MESSAGE
-Example did not properly validate that the length of :name is 4.
-  After setting :name to ‹"xxx"› -- which was read back as ‹"xxxj"› --
+    it_supports('ignoring_interference_by_writer', {
+      raise_if_not_qualified: {
+        changing_values_with: :upcase,
+      },
+      accept_if_qualified_but_changing_value_does_not_interfere: {
+        changing_values_with: :upcase,
+      },
+      reject_if_qualified_but_changing_value_interferes: {
+        model_name: 'Example',
+        attribute_name: :attr,
+        changing_values_with: :add_character,
+        expected_message: <<-MESSAGE
+Example did not properly validate that the length of :attr is 4.
+  After setting :attr to ‹"xxx"› -- which was read back as ‹"xxxa"› --
   the matcher expected the Example to be invalid, but it was valid
   instead.
 
-  As indicated in the message above, :name seems to be changing certain
+  As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-          MESSAGE
+        MESSAGE
+      }
+    }) do
+      def validation_options
+        { is: 4 }
+      end
 
-          expect(&assertion).to fail_with_message(message)
-        end
+      def configure_matcher(matcher)
+        matcher.is_equal_to(4)
       end
     end
   end
@@ -403,4 +278,12 @@ Example did not properly validate that the length of :name is 4.
   end
 
   alias_method :build_record_validating_length, :validating_length
+
+  def model_creator
+    UnitTests::ActiveModel::CreateModel
+  end
+
+  def matcher_name
+    :validate_length_of
+  end
 end

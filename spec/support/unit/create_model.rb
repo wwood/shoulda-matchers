@@ -94,6 +94,10 @@ module UnitTests
         value.presence || 'something different'
       when :always_nil
         nil
+      when :add_character
+        value + 'a'
+      when :remove_character
+        value.chop
       else
         value.public_send(value_changer)
       end
