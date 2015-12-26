@@ -319,11 +319,12 @@ module Shoulda
           @expects_strict = false
           @allowed_type_adjective = nil
           @allowed_type_name = 'number'
+          @context = nil
+          @expected_message = nil
         end
 
         def strict
           @expects_strict = true
-          @submatchers.each(&:strict)
           self
         end
 
@@ -393,7 +394,7 @@ module Shoulda
 
         def with_message(message)
           @expects_custom_validation_message = true
-          @submatchers.each { |matcher| matcher.with_message(message) }
+          @expected_message = message
           self
         end
 
@@ -402,7 +403,7 @@ module Shoulda
         end
 
         def on(context)
-          @submatchers.each { |matcher| matcher.on(context) }
+          @context = context
           self
         end
 
@@ -422,6 +423,7 @@ module Shoulda
             )
           end
 
+          qualify_submatchers
           first_failing_submatcher.nil?
         end
 
@@ -522,6 +524,22 @@ module Shoulda
           end
 
           @submatchers << submatcher
+        end
+
+        def qualify_submatchers
+          @submatchers.each do |submatcher|
+            if @expects_strict
+              submatcher.strict(@expects_strict)
+            end
+
+            if @expected_message.present?
+              submatcher.with_message(@expected_message)
+            end
+
+            if @context
+              submatcher.on(@context)
+            end
+          end
         end
 
         def number_of_submatchers_for_failure_message
