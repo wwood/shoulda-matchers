@@ -1,13 +1,14 @@
 module UnitTests
   module ModelCreationStrategies
     class ActiveRecord
-      def self.call(name, columns = {}, &block)
-        new(name, columns, &block).call
+      def self.call(name, columns = {}, options = {}, &block)
+        new(name, columns, options, &block).call
       end
 
-      def initialize(name, columns = {}, &block)
+      def initialize(name, columns = {}, options = {}, &block)
         @name = name
         @columns = columns
+        @options = options
         @model_customizers = []
 
         if block
@@ -26,7 +27,7 @@ module UnitTests
 
       protected
 
-      attr_reader :block, :columns, :model_customizers, :name
+      attr_reader :columns, :model_customizers, :name, :options
 
       private
 
@@ -35,13 +36,16 @@ module UnitTests
       end
 
       def define_class_for_model
-        model = UnitTests::ModelBuilder.define_model_class(class_name, &block)
+        model = UnitTests::ModelBuilder.define_model_class(class_name)
 
         model_customizers.each do |block|
           run_block(model, block)
         end
 
-        model.attr_accessible(*columns.keys)
+        if whitelist_attributes?
+          model.attr_accessible(*columns.keys)
+        end
+
         model.table_name = table_name
 
         model
@@ -63,6 +67,10 @@ module UnitTests
 
       def table_name
         class_name.tableize.gsub('/', '_')
+      end
+
+      def whitelist_attributes?
+        options.fetch(:whitelist_attributes, true)
       end
 
       ColumnNotSupportedError = Class.new(StandardError)

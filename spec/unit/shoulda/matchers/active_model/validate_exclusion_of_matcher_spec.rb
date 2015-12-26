@@ -43,11 +43,11 @@ to ‹5›.
       },
       model_creator: :active_model
     ) do
-      def validation_options
-        { in: 2..5 }
+      def validation_matcher_scenario_args
+        super.deep_merge(validation_options: { in: 2..5 })
       end
 
-      def configure_matcher(matcher)
+      def configure_validation_matcher(matcher)
         matcher.in_range(2..5)
       end
     end
@@ -169,11 +169,11 @@ Example did not properly validate that :attr is neither ‹"one"› nor
       },
       model_creator: :active_model
     ) do
-      def validation_options
-        { in: ['one', 'two'] }
+      def validation_matcher_scenario_args
+        super.deep_merge(validation_options: { in: ['one', 'two'] })
       end
 
-      def configure_matcher(matcher)
+      def configure_validation_matcher(matcher)
         matcher.in_array(['one', 'two'])
       end
     end
@@ -201,7 +201,7 @@ Example did not properly validate that :attr is neither ‹"one"› nor
 
   alias_method :build_record_validating_exclusion, :validating_exclusion
 
-  def matcher_name
-    :validate_exclusion_of
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_exclusion_of }
   end
 end

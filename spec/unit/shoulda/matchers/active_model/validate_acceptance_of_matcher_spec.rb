@@ -85,7 +85,7 @@ Example did not properly validate that :attr has been set to "1".
   alias_method :build_record_validating_acceptance,
     :record_validating_acceptance
 
-  def matcher_name
-    :validate_acceptance_of
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_acceptance_of }
   end
 end

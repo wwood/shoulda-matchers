@@ -242,11 +242,11 @@ only if it is not nil.
           MESSAGE
         }
       }) do
-        def validation_options
-          { allow_nil: true }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { allow_nil: true })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.allow_nil
         end
       end
@@ -306,11 +306,11 @@ Example did not properly validate that :attr looks like an integer.
           MESSAGE
         }
       }) do
-        def validation_options
-          { only_integer: true }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { only_integer: true })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.only_integer
         end
       end
@@ -366,11 +366,11 @@ Example did not properly validate that :attr looks like an odd number.
           MESSAGE
         }
       }) do
-        def validation_options
-          { odd: true }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { odd: true })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.odd
         end
       end
@@ -459,11 +459,11 @@ Example did not properly validate that :attr looks like an even number.
           MESSAGE
         }
       }) do
-        def validation_options
-          { even: true }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { even: true })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.even
         end
       end
@@ -555,11 +555,13 @@ than or equal to 18.
           MESSAGE
         }
       }) do
-        def validation_options
-          { less_than_or_equal_to: 18 }
+        def validation_matcher_scenario_args
+          super.deep_merge(
+            validation_options: { less_than_or_equal_to: 18 }
+          )
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.is_less_than_or_equal_to(18)
         end
       end
@@ -652,11 +654,11 @@ than 18.
           MESSAGE
         }
       }) do
-        def validation_options
-          { less_than: 18 }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { less_than: 18 })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.is_less_than(18)
         end
       end
@@ -747,11 +749,11 @@ to 18.
           MESSAGE
         }
       }) do
-        def validation_options
-          { equal_to: 18 }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { equal_to: 18 })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.is_equal_to(18)
         end
       end
@@ -843,11 +845,13 @@ than or equal to 18.
           MESSAGE
         }
       }) do
-        def validation_options
-          { greater_than_or_equal_to: 18 }
+        def validation_matcher_scenario_args
+          super.deep_merge(
+            validation_options: { greater_than_or_equal_to: 18 }
+          )
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.is_greater_than_or_equal_to(18)
         end
       end
@@ -944,11 +948,11 @@ than 18.
           MESSAGE
         }
       }) do
-        def validation_options
-          { greater_than: 18 }
+        def validation_matcher_scenario_args
+          super.deep_merge(validation_options: { greater_than: 18 })
         end
 
-        def configure_matcher(matcher)
+        def configure_validation_matcher(matcher)
           matcher.is_greater_than(18)
         end
       end
@@ -1604,8 +1608,8 @@ Example did not properly validate that :attr looks like a number.
       }
     })
 
-    def model_creator
-      :active_model
+    def validation_matcher_scenario_args
+      super.deep_merge(model_creator: :active_model)
     end
   end
 
@@ -1746,11 +1750,7 @@ Example did not properly validate that :attr looks like a number.
     :attr
   end
 
-  def matcher_name
-    :validate_numericality_of
-  end
-
-  def model_creator
-    :active_record
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_numericality_of, model_creator: :active_record }
   end
 end

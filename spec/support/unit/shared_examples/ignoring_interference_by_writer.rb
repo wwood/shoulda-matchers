@@ -8,11 +8,11 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
       if config_for_test
         it 'raises an AttributeChangedValueError' do
           args = build_args(config_for_test)
-          builder = build_scenario_for_validation_matcher(args)
-          matcher = matcher_from(builder)
+          scenario = build_scenario_for_validation_matcher(args)
+          matcher = matcher_from(scenario)
 
           assertion = lambda do
-            expect(builder.record).to matcher
+            expect(scenario.record).to matcher
           end
 
           expect(&assertion).to raise_error(
@@ -29,10 +29,10 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
         if config_for_test
           it 'accepts (and does not raise an error)' do
             args = build_args(config_for_test)
-            builder = build_scenario_for_validation_matcher(args)
-            matcher = matcher_from(builder)
+            scenario = build_scenario_for_validation_matcher(args)
+            matcher = matcher_from(scenario)
 
-            expect(builder.record).to matcher.ignoring_interference_by_writer
+            expect(scenario.record).to matcher.ignoring_interference_by_writer
           end
         end
       end
@@ -43,11 +43,11 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
         if config_for_test
           it 'lists how the value got changed in the failure message' do
             args = build_args(config_for_test)
-            builder = build_scenario_for_validation_matcher(args)
-            matcher = matcher_from(builder)
+            scenario = build_scenario_for_validation_matcher(args)
+            matcher = matcher_from(scenario)
 
             assertion = lambda do
-              expect(builder.record).to matcher.ignoring_interference_by_writer
+              expect(scenario.record).to matcher.ignoring_interference_by_writer
             end
 
             if config_for_test.key?(:expected_message_includes)
@@ -63,10 +63,6 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
     end
   end
 
-  def column_type
-    common_config.fetch(:column_type, :string)
-  end
-
   def build_args(config_for_test)
     args = {
       model_options: {
@@ -77,17 +73,13 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
     args.merge!(common_config.slice(:model_creator, :column_type))
     args.merge!(config_for_test.slice(:model_name, :attribute_name))
 
-    if respond_to?(:validation_options)
-      args[:validation_options] = validation_options
-    end
-
     args
   end
 
-  def matcher_from(builder)
-    builder.matcher.tap do |matcher|
-      if respond_to?(:configure_matcher)
-        configure_matcher(matcher)
+  def matcher_from(scenario)
+    scenario.matcher.tap do |matcher|
+      if respond_to?(:configure_validation_matcher)
+        configure_validation_matcher(matcher)
       end
     end
   end

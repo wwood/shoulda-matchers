@@ -3,15 +3,20 @@ module UnitTests
     attr_reader :matcher
 
     def initialize(args)
-      @args = args.dup
-      @matcher_proc = args.delete(:matcher_proc)
+      @args = args.deep_dup
+      @matcher_proc = @args.delete(:matcher_proc)
+      @specified_model_creator = @args.delete(:model_creator)
+      @existing_value_specified = @args.key?(:existing_value)
+      @existing_value = @args.delete(:existing_value) { nil }
+
+      @model_creator = model_creator_class.new(@args)
     end
 
     def record
-      if args.key?(:build_scenario_object)
-        args[:build_scenario_object].call(args)
-      else
-        model.new
+      @_record ||= model.new.tap do |record|
+        if existing_value_specified?
+          record.public_send("#{attribute_name}=", existing_value)
+        end
       end
     end
 
@@ -20,24 +25,30 @@ module UnitTests
     end
 
     def matcher
-      @_matcher ||= matcher_proc.call(model_creator.attribute_name)
+      @_matcher ||= matcher_proc.call(attribute_name)
     end
 
     protected
 
-    attr_reader :args, :matcher_proc
+    attr_reader(
+      :args,
+      :existing_value,
+      :matcher_proc,
+      :model_creator,
+      :specified_model_creator,
+    )
 
-    def model_creator
-      @_model_creator ||= model_creator_class.new(args)
+    private
+
+    delegate :attribute_name, to: :model_creator
+
+    def existing_value_specified?
+      @existing_value_specified
     end
 
     def model_creator_class
-      UnitTests::ModelCreators.retrieve(given_model_creator) ||
-        given_model_creator
-    end
-
-    def given_model_creator
-      args.fetch(:model_creator)
+      UnitTests::ModelCreators.retrieve(specified_model_creator) ||
+        specified_model_creator
     end
   end
 end

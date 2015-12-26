@@ -1,13 +1,14 @@
 module UnitTests
   module ModelCreationStrategies
     class ActiveModel
-      def self.call(name, columns = {}, &block)
-        new(name, columns, &block).call
+      def self.call(name, columns = {}, options = {}, &block)
+        new(name, columns, options, &block).call
       end
 
-      def initialize(name, columns = {}, &block)
+      def initialize(name, columns = {}, options = {}, &block)
         @name = name
         @columns = columns
+        @options = options
         @model_customizers = []
 
         if block
@@ -22,7 +23,6 @@ module UnitTests
       def call
         ClassBuilder.define_class(name, Model).tap do |model|
           model.columns = columns.keys
-          model.send(:include, attributes_module)
 
           model_customizers.each do |block|
             run_block(model, block)
@@ -32,17 +32,9 @@ module UnitTests
 
       protected
 
-      attr_reader :name, :columns, :block, :model_customizers
+      attr_reader :name, :columns, :model_customizers, :options
 
       private
-
-      def attributes_module
-        _columns = columns
-
-        @_attributes_module ||= Module.new do
-          attr_accessor(*_columns.keys)
-        end
-      end
 
       def run_block(model, block)
         if block
@@ -56,14 +48,37 @@ module UnitTests
 
       class Model
         class << self
-          attr_reader :columns
+          def columns
+            @_columns ||= []
+          end
 
           def columns=(columns)
-            @columns = columns.map(&:to_sym)
+            existing_columns = self.columns
+            new_columns = columns - existing_columns
+
+            @_columns += new_columns
+
+            include attributes_module
+
+            attributes_module.module_eval do
+              new_columns.each do |column|
+                define_method(column) do
+                  attributes[column]
+                end
+
+                define_method("#{column}=") do |value|
+                  attributes[column] = value
+                end
+              end
+            end
+          end
+
+          private
+
+          def attributes_module
+            @_attributes_module ||= Module.new
           end
         end
-
-        self.columns = []
 
         include ::ActiveModel::Model
 
@@ -84,26 +99,6 @@ module UnitTests
         end
 
         private
-
-        def method_missing(name, *args, &block)
-          if name.end_with?('=')
-            name = name.chop
-
-            if attributes.key?(name)
-              attributes[name] = args.first
-            else
-              super
-            end
-          elsif attributes.key?(name)
-            attributes[name]
-          else
-            super
-          end
-        end
-
-        def respond_to_missing?(name, include_private = true)
-          attributes.key?(name) || super
-        end
 
         def inspected_attributes
           self.class.columns.

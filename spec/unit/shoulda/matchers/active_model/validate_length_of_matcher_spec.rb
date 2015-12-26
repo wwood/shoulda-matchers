@@ -48,11 +48,11 @@ Example did not properly validate that the length of :attr is at least
         MESSAGE
       }
     }) do
-      def validation_options
-        { minimum: 4 }
+      def validation_matcher_scenario_args
+        super.deep_merge(validation_options: { minimum: 4 })
       end
 
-      def configure_matcher(matcher)
+      def configure_validation_matcher(matcher)
         matcher.is_at_least(4)
       end
     end
@@ -111,11 +111,11 @@ Example did not properly validate that the length of :attr is at most 4.
         MESSAGE
       }
     }) do
-      def validation_options
-        { maximum: 4 }
+      def validation_matcher_scenario_args
+        super.deep_merge(validation_options: { maximum: 4 })
       end
 
-      def configure_matcher(matcher)
+      def configure_validation_matcher(matcher)
         matcher.is_at_most(4)
       end
     end
@@ -167,11 +167,11 @@ Example did not properly validate that the length of :attr is 4.
         MESSAGE
       }
     }) do
-      def validation_options
-        { is: 4 }
+      def validation_matcher_scenario_args
+        super.deep_merge(validation_options: { is: 4 })
       end
 
-      def configure_matcher(matcher)
+      def configure_validation_matcher(matcher)
         matcher.is_equal_to(4)
       end
     end
@@ -279,11 +279,7 @@ Example did not properly validate that the length of :attr is 4.
 
   alias_method :build_record_validating_length, :validating_length
 
-  def model_creator
-    UnitTests::ActiveModel::CreateModel
-  end
-
-  def matcher_name
-    :validate_length_of
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_length_of, model_creator: :active_model }
   end
 end

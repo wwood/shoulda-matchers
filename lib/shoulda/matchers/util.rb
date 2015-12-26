@@ -50,6 +50,25 @@ module Shoulda
       def self.inspect_range(range)
         "#{inspect_value(range.first)} to #{inspect_value(range.last)}"
       end
+
+      def self.dummy_value_for(column_type)
+        case column_type
+        when :integer
+          0
+        when :date
+          Date.new(2100, 1, 1)
+        when :datetime, :timestamp
+          DateTime.new(2100, 1, 1)
+        when :time
+          Time.new(2100, 1, 1)
+        when :uuid
+          SecureRandom.uuid
+        when :boolean
+          true
+        else
+          'dummy value'
+        end
+      end
     end
   end
 end

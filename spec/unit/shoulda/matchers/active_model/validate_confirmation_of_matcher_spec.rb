@@ -143,7 +143,7 @@ Example did not properly validate that
     end
   end
 
-  def matcher_name
-    :validate_confirmation_of
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_confirmation_of }
   end
 end

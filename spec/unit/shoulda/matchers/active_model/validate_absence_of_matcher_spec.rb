@@ -244,8 +244,8 @@ Parent did not properly validate that :children is empty/falsy.
       end.new
     end
 
-    def matcher_name
-      :validate_absence_of
+    def validation_matcher_scenario_args
+      { matcher_name: :validate_absence_of }
     end
   end
 end

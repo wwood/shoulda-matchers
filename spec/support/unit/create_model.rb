@@ -34,7 +34,7 @@ module UnitTests
     private
 
     def build_model_creator
-      model_creation_strategy.new(model_name, columns).tap do |model_creator|
+      model_creation_strategy.new(model_name, columns, args).tap do |model_creator|
         model_creator.customize_model do |model|
           add_validation_to(model)
           possibly_override_attribute_writer_method_for(model)
@@ -99,11 +99,11 @@ module UnitTests
           change_value(value, :non_numeric_value)
         end
       when :never_falsy
-        value || 'something different'
+        value || dummy_value_for_column
       when :truthy_or_numeric
         value || 1
       when :never_blank
-        value.presence || 'something different'
+        value.presence || dummy_value_for_column
       when :always_nil
         nil
       when :add_character
@@ -117,6 +117,10 @@ module UnitTests
       else
         value.public_send(_value_changer)
       end
+    end
+
+    def dummy_value_for_column
+      Shoulda::Matchers::Util.dummy_value_for(column_type)
     end
 
     def map_matcher_name_to_validation_name
@@ -143,12 +147,12 @@ module UnitTests
       args.fetch(:column_type, DEFAULT_COLUMN_TYPE)
     end
 
-    def model_options
-      args.fetch(:model_options, {})
-    end
-
     def value_changer
       model_options[:changing_values_with]
+    end
+
+    def model_options
+      args.fetch(:model_options, {})
     end
 
     def validation_name

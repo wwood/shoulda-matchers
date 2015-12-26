@@ -5,27 +5,38 @@ module UnitTests
     end
 
     def build_scenario_for_validation_matcher(args)
-      matcher_proc = method(matcher_name)
-      scenario_args = args.merge(
-        matcher_name: matcher_name,
-        matcher_proc: matcher_proc,
+      UnitTests::ValidationMatcherScenario.new(
+        build_validation_matcher_scenario_args(args)
       )
+    end
 
-      if respond_to?(:build_scenario_object)
-        scenario_args[:build_scenario_object] = method(:build_scenario_object)
-      elsif respond_to?(:model_creator)
-        scenario_args[:model_creator] = model_creator
-      else
-        scenario_args[:model_creator] = args.fetch(:model_creator)
-      end
+    private
 
-      UnitTests::ValidationMatcherScenario.new(scenario_args)
+    def build_validation_matcher_scenario_args(args)
+      args.
+        deep_merge(validation_matcher_scenario_args).
+        deep_merge(
+          matcher_name: matcher_name,
+          matcher_proc: method(matcher_name)
+        )
     end
 
     def matcher_name
-      raise NotImplementedError.new(
-        'Please implement #matcher_name in your example group'
-      )
+      validation_matcher_scenario_args.fetch(:matcher_name) do
+        raise KeyNotFoundError.new(<<-MESSAGE)
+Please implement #validation_matcher_scenario_args in your example
+group in such a way that it returns a hash that contains a :matcher_name
+key.
+        MESSAGE
+      end
+    end
+
+    def validation_matcher_scenario_args
+      raise NotImplementedError.new(<<-MESSAGE)
+Please implement #validation_matcher_scenario_args in your example
+group. (It should return a hash that contains at least a :matcher_name
+key.)
+      MESSAGE
     end
   end
 end

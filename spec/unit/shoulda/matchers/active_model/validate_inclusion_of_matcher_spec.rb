@@ -48,6 +48,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :integer, existing_value: 1)
+      end
     end
 
     context 'against an attribute with a specific column limit' do
@@ -94,6 +98,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :float, existing_value: 1.0)
+      end
     end
 
     context 'against a decimal attribute' do
@@ -118,10 +126,19 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(
+          column_type: :decimal,
+          existing_value: BigDecimal.new('1.0')
+        )
+      end
     end
 
     context 'against a date attribute' do
       today = Date.today
+
+      define_method(:today) { today }
 
       it_behaves_like 'it supports in_array',
         possible_values: (1..5).map { |n| today + n },
@@ -140,10 +157,16 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :date, existing_value: today)
+      end
     end
 
     context 'against a datetime attribute' do
       now = DateTime.now
+
+      define_method(:now) { now }
 
       it_behaves_like 'it supports in_array',
         possible_values: (1..5).map { |n| now + n },
@@ -162,10 +185,16 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :datetime, existing_value: now)
+      end
     end
 
     context 'against a time attribute' do
       now = Time.now
+
+      define_method(:now) { now }
 
       it_behaves_like 'it supports in_array',
         possible_values: (1..5).map { |n| now + n },
@@ -184,6 +213,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       def add_outside_value_to(values)
         values + [values.last + 1]
       end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :time, existing_value: now)
+      end
     end
 
     context 'against a string attribute' do
@@ -200,6 +233,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
       def add_outside_value_to(values)
         values + %w(qux)
+      end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :string)
       end
     end
   end
@@ -249,11 +286,11 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       }
     )
 
-    def validation_options
-      super.merge(allow_nil: true)
+    def validation_matcher_scenario_args
+      super.deep_merge(validation_options: { allow_nil: true })
     end
 
-    def configure_matcher(matcher)
+    def configure_validation_matcher(matcher)
       super(matcher).allow_nil
     end
   end
@@ -305,11 +342,11 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       }
     )
 
-    def validation_options
-      super.merge(allow_blank: true)
+    def validation_matcher_scenario_args
+      super.deep_merge(validation_options: { allow_blank: true })
     end
 
-    def configure_matcher(matcher)
+    def configure_validation_matcher(matcher)
       super(matcher).allow_blank
     end
   end
@@ -504,11 +541,11 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       expect_not_to_match_in_array(builder, values, &block)
     end
 
-    def validation_options
-      super.merge(in: valid_values)
+    def validation_matcher_scenario_args
+      super.deep_merge(validation_options: { in: valid_values })
     end
 
-    def configure_matcher(matcher)
+    def configure_validation_matcher(matcher)
       super(matcher).in_array(valid_values)
     end
   end
@@ -625,11 +662,11 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       expect_not_to_match_in_range(builder, range, &block)
     end
 
-    def validation_options
-      super.merge(in: valid_values)
+    def validation_matcher_scenario_args
+      super.deep_merge(validation_options: { in: valid_values })
     end
 
-    def configure_matcher(matcher)
+    def configure_validation_matcher(matcher)
       super(matcher).in_range(valid_values)
     end
   end
@@ -682,6 +719,8 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
     context 'against a timestamp column' do
       now = DateTime.now
 
+      define_method(:now) { now }
+
       it_behaves_like 'it supports in_array',
         possible_values: (1..5).map { |n| now + n },
         reserved_outside_value: described_class::ARBITRARY_OUTSIDE_DATETIME
@@ -698,6 +737,10 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
       def add_outside_value_to(values)
         values + [values.last + 1]
+      end
+
+      def validation_matcher_scenario_args
+        super.deep_merge(column_type: :timestamp, existing_value: now)
       end
     end
 
@@ -764,8 +807,8 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       define_model('Example', attribute_name => column_options, &block)
     end
 
-    def model_creator_strategy
-      UnitTests::ActiveRecord::CreateModel
+    def validation_matcher_scenario_args
+      super.deep_merge(model_creator: :active_record)
     end
   end
 
@@ -792,8 +835,8 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
       define_active_model_class('Example', accessors: [attribute_name], &block)
     end
 
-    def model_creator_strategy
-      UnitTests::ActiveModel::CreateModel
+    def validation_matcher_scenario_args
+      super.deep_merge(model_creator: :active_model)
     end
   end
 
@@ -966,15 +1009,11 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
     end
   end
 
-  def validation_options
-    {}
+  def validation_matcher_scenario_args
+    { matcher_name: :validate_inclusion_of }
   end
 
-  def configure_matcher(matcher)
+  def configure_validation_matcher(matcher)
     matcher
-  end
-
-  def matcher_name
-    :validate_inclusion_of
   end
 end

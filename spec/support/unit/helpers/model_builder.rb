@@ -49,7 +49,7 @@ module UnitTests
       end
 
       def define_active_model_class(class_name, options = {}, &block)
-        attribute_names = options.fetch(:accessors, [])
+        attribute_names = options.delete(:accessors) { [] }
 
         columns = attribute_names.reduce({}) do |hash, attribute_name|
           hash.merge(attribute_name => nil)
@@ -58,14 +58,16 @@ module UnitTests
         UnitTests::ModelCreationStrategies::ActiveModel.call(
           'Example',
           columns,
+          options,
           &block
         )
       end
 
-      def define_model(name, columns = {}, &block)
+      def define_model(name, columns = {}, options = {}, &block)
         model = UnitTests::ModelCreationStrategies::ActiveRecord.call(
           name,
           columns,
+          options,
           &block
         )
         defined_models << model
