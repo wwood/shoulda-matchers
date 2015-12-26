@@ -19,6 +19,7 @@ module Shoulda
             @context = nil
             @expects_strict = false
             @expects_custom_validation_message = false
+            @ignoring_interference_by_writer = false
           end
 
           def with_message(message)
@@ -48,6 +49,10 @@ module Shoulda
             self
           end
 
+          def ignoring_interference_by_writer(value = true)
+            @ignoring_interference_by_writer = value
+          end
+
           def allowed_type_name
             'number'
           end
@@ -74,11 +79,19 @@ module Shoulda
 
           private
 
+          def ignoring_interference_by_writer?
+            !!@ignoring_interference_by_writer
+          end
+
           def disallow_value_matcher
             @_disallow_value_matcher ||= begin
               DisallowValueMatcher.new(disallowed_value).tap do |matcher|
                 matcher.for(attribute)
                 wrap_disallow_value_matcher(matcher)
+
+                matcher.ignoring_interference_by_writer(
+                  ignoring_interference_by_writer?
+                )
 
                 if @message
                   matcher.with_message(@message)

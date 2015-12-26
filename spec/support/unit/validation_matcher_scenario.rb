@@ -28,7 +28,16 @@ module UnitTests
     attr_reader :args, :matcher_proc
 
     def model_creator
-      @_model_creator ||= UnitTests::CreateModel.new(args)
+      @_model_creator ||= model_creator_class.new(args)
+    end
+
+    def model_creator_class
+      UnitTests::ModelCreators.retrieve(given_model_creator) ||
+        given_model_creator
+    end
+
+    def given_model_creator
+      args.fetch(:model_creator)
     end
   end
 end

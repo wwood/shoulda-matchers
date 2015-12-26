@@ -33,7 +33,7 @@ Example did not properly validate that :attr has been set to "1".
   do something else entirely.
         MESSAGE
       },
-      model_creator: UnitTests::ActiveModel::CreateModel
+      model_creator: :active_model
     }
   end
 

@@ -319,6 +319,7 @@ module Shoulda
           @expects_strict = false
           @allowed_type_adjective = nil
           @allowed_type_name = 'number'
+          @ignoring_interference_by_writer = false
           @context = nil
           @expected_message = nil
         end
@@ -407,6 +408,11 @@ module Shoulda
           self
         end
 
+        def ignoring_interference_by_writer(value = true)
+          @ignoring_interference_by_writer = value
+          self
+        end
+
         def matches?(subject)
           @subject = subject
           @number_of_submatchers = @submatchers.size
@@ -474,6 +480,10 @@ module Shoulda
           @subject.class
         end
 
+        def ignoring_interference_by_writer?
+          !!@ignoring_interference_by_writer
+        end
+
         def overall_failure_message
           Shoulda::Matchers.word_wrap(
             "#{model.name} did not properly #{description}."
@@ -503,10 +513,7 @@ module Shoulda
 
         def prepare_submatcher(submatcher)
           add_submatcher(submatcher)
-
-          if submatcher.respond_to?(:diff_to_compare)
-            update_diff_to_compare(submatcher)
-          end
+          submatcher
         end
 
         def comparison_matcher_for(value, operator)
@@ -521,6 +528,10 @@ module Shoulda
 
           if submatcher.respond_to?(:allowed_type_adjective)
             @allowed_type_adjective = submatcher.allowed_type_adjective
+          end
+
+          if submatcher.respond_to?(:diff_to_compare)
+            @diff_to_compare = [@diff_to_compare, submatcher.diff_to_compare].max
           end
 
           @submatchers << submatcher
@@ -539,6 +550,10 @@ module Shoulda
             if @context
               submatcher.on(@context)
             end
+
+            submatcher.ignoring_interference_by_writer(
+              ignoring_interference_by_writer?
+            )
           end
         end
 
@@ -554,10 +569,6 @@ module Shoulda
           @submatchers.any? do |submatcher|
             submatcher.class.parent == NumericalityMatchers
           end
-        end
-
-        def update_diff_to_compare(matcher)
-          @diff_to_compare = [@diff_to_compare, matcher.diff_to_compare].max
         end
 
         def first_failing_submatcher

@@ -53,7 +53,7 @@ Example did not properly validate that :password_confirmation matches
   pass, or do something else entirely.
         MESSAGE
       },
-      model_creator: UnitTests::ActiveModel::CreateModel
+      model_creator: :active_model
     }
   end
 

@@ -44,8 +44,8 @@ module Shoulda
           @expects_custom_validation_message
         end
 
-        def ignoring_interference_by_writer
-          @ignoring_interference_by_writer = true
+        def ignoring_interference_by_writer(value = true)
+          @ignoring_interference_by_writer = value
           self
         end
 

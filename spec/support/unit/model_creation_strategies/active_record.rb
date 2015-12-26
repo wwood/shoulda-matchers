@@ -1,11 +1,11 @@
 module UnitTests
   module ModelCreationStrategies
     class ActiveRecord
-      def self.call(name, columns = {}, options = {}, &block)
-        new(name, columns, options, &block).call
+      def self.call(name, columns = {}, &block)
+        new(name, columns, &block).call
       end
 
-      def initialize(name, columns = {}, options = {}, &block)
+      def initialize(name, columns = {}, &block)
         @name = name
         @columns = columns
         @model_customizers = []

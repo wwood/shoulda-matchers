@@ -11,15 +11,12 @@ module UnitTests
         matcher_proc: matcher_proc,
       )
 
-      if respond_to?(:model_creation_strategy)
-        scenario_args[:model_creation_strategy] = model_creation_strategy
-      elsif respond_to?(:build_scenario_object)
+      if respond_to?(:build_scenario_object)
         scenario_args[:build_scenario_object] = method(:build_scenario_object)
+      elsif respond_to?(:model_creator)
+        scenario_args[:model_creator] = model_creator
       else
-        scenario_args[:model_creation_strategy] = args.fetch(
-          :model_creation_strategy,
-          UnitTests::ModelCreationStrategies::ActiveModel
-        )
+        scenario_args[:model_creator] = args.fetch(:model_creator)
       end
 
       UnitTests::ValidationMatcherScenario.new(scenario_args)

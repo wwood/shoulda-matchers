@@ -41,7 +41,7 @@ to ‹5›.
   do something else entirely.
         MESSAGE
       },
-      model_creator: UnitTests::ActiveModel::CreateModel
+      model_creator: :active_model
     ) do
       def validation_options
         { in: 2..5 }
@@ -167,7 +167,7 @@ Example did not properly validate that :attr is neither ‹"one"› nor
   do something else entirely.
         MESSAGE
       },
-      model_creator: UnitTests::ActiveModel::CreateModel
+      model_creator: :active_model
     ) do
       def validation_options
         { in: ['one', 'two'] }

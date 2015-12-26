@@ -40,7 +40,7 @@ describe Shoulda::Matchers::ActiveModel::ValidateAbsenceOfMatcher, type: :model 
             accept_if_qualified_but_changing_value_interferes: {
               changing_values_with: :next_value
             },
-            model_creator: UnitTests::ActiveRecord::CreateModel,
+            model_creator: :active_record,
             column_type: type
           }
         end
@@ -81,7 +81,7 @@ Example did not properly validate that :attr is empty/falsy.
         accept_if_qualified_but_changing_value_interferes: {
           changing_values_with: :upcase
         },
-        model_creator: UnitTests::ActiveModel::CreateModel,
+        model_creator: :active_model
       }
     end
 
@@ -113,7 +113,7 @@ Example did not properly validate that :attr is empty/falsy.
         accept_if_qualified_but_changing_value_interferes: {
           changing_values_with: :next_value
         },
-        model_creator: UnitTests::ActiveRecord::CreateModelWithHasMany
+        model_creator: :"active_record/has_many"
       }
     end
 
@@ -137,7 +137,7 @@ Example did not properly validate that :attr is empty/falsy.
         accept_if_qualified_but_changing_value_interferes: {
           changing_values_with: :next_value
         },
-        model_creator: UnitTests::ActiveRecord::CreateModelWithHabtm
+        model_creator: :"active_record/habtm"
       }
     end
 
