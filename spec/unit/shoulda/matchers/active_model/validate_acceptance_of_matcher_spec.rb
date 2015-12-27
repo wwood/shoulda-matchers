@@ -10,18 +10,20 @@ describe Shoulda::Matchers::ActiveModel::ValidateAcceptanceOfMatcher, type: :mod
       expect(record_validating_acceptance).to matcher.with_message(nil)
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :never_falsy,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :never_falsy,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :always_nil,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :never_falsy,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :never_falsy,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :always_nil,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that :attr has been set to "1".
   After setting :attr to ‹false› -- which was read back as ‹nil› -- the
   matcher expected the Example to be invalid, but it was valid instead.
@@ -31,10 +33,11 @@ Example did not properly validate that :attr has been set to "1".
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        },
       },
       model_creator: :active_model
-    }
+    )
   end
 
   context 'a model without an acceptance validation' do

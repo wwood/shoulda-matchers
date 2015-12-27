@@ -4,6 +4,8 @@ module Shoulda
       module Qualifiers
         # @private
         module IgnoringInterferenceByWriter
+          attr_reader :ignore_interference_by_writer
+
           def initialize(*args)
             @ignore_interference_by_writer = IgnoreInterferenceByWriter.new
           end
@@ -11,10 +13,6 @@ module Shoulda
           def ignoring_interference_by_writer(value = :always)
             @ignore_interference_by_writer.set(value)
             self
-          end
-
-          def ignore_interference_by_writer
-            @ignore_interference_by_writer
           end
         end
       end

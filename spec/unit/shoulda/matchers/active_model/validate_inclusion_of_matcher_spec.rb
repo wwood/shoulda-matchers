@@ -267,22 +267,24 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: -> (value) { value || valid_values.first }
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        attribute_name: :attr,
-        changing_values_with: :never_falsy,
-        expected_message_includes: <<-MESSAGE.strip
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: -> (value) { value || valid_values.first }
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          attribute_name: :attr,
+          changing_values_with: :never_falsy,
+          expected_message_includes: <<-MESSAGE.strip
   As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
     )
 
@@ -321,24 +323,26 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: -> (value) {
-          value.presence || valid_values.first
-        }
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        attribute_name: :attr,
-        changing_values_with: :never_blank,
-        expected_message_includes: <<-MESSAGE.strip
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: -> (value) {
+            value.presence || valid_values.first
+          }
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          attribute_name: :attr,
+          changing_values_with: :never_blank,
+          expected_message_includes: <<-MESSAGE.strip
   As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
     )
 
@@ -517,19 +521,21 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        attribute_name: :attr,
-        changing_values_with: :next_value,
-        expected_message_includes: <<-MESSAGE.strip
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          attribute_name: :attr,
+          changing_values_with: :next_value,
+          expected_message_includes: <<-MESSAGE.strip
   As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
     )
 
@@ -638,19 +644,21 @@ describe Shoulda::Matchers::ActiveModel::ValidateInclusionOfMatcher, type: :mode
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        attribute_name: :attr,
-        changing_values_with: :next_value,
-        expected_message_includes: <<-MESSAGE.strip
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          attribute_name: :attr,
+          changing_values_with: :next_value,
+          expected_message_includes: <<-MESSAGE.strip
   As indicated in the message above, :attr seems to be changing certain
   values as they are set, and this could have something to do with why
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
     )
 

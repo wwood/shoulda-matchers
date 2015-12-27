@@ -22,18 +22,20 @@ describe Shoulda::Matchers::ActiveModel::ValidateLengthOfMatcher, type: :model d
         to validate_length_of(:attr).is_at_least(4).with_short_message(nil)
     end
 
-    it_supports('ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :upcase,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :upcase,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :add_character,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :upcase,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :upcase,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :add_character,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that the length of :attr is at least
 4.
   After setting :attr to ‹"xxx"› -- which was read back as ‹"xxxa"› --
@@ -45,9 +47,10 @@ Example did not properly validate that the length of :attr is at least
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }) do
+    ) do
       def validation_matcher_scenario_args
         super.deep_merge(validation_options: { minimum: 4 })
       end
@@ -86,18 +89,20 @@ Example did not properly validate that the length of :attr is at least
         to validate_length_of(:attr).is_at_most(4).with_long_message(nil)
     end
 
-    it_supports('ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :upcase,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :upcase,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :remove_character,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :upcase,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :upcase,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :remove_character,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that the length of :attr is at most 4.
   After setting :attr to ‹"xxxxx"› -- which was read back as ‹"xxxx"› --
   the matcher expected the Example to be invalid, but it was valid
@@ -108,9 +113,10 @@ Example did not properly validate that the length of :attr is at most 4.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }) do
+    ) do
       def validation_matcher_scenario_args
         super.deep_merge(validation_options: { maximum: 4 })
       end
@@ -142,18 +148,20 @@ Example did not properly validate that the length of :attr is at most 4.
         to validate_length_of(:attr).is_equal_to(4).with_message(nil)
     end
 
-    it_supports('ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :upcase,
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :upcase,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :add_character,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :upcase,
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :upcase,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :add_character,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that the length of :attr is 4.
   After setting :attr to ‹"xxx"› -- which was read back as ‹"xxxa"› --
   the matcher expected the Example to be invalid, but it was valid
@@ -164,9 +172,10 @@ Example did not properly validate that the length of :attr is 4.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }) do
+    ) do
       def validation_matcher_scenario_args
         super.deep_merge(validation_options: { is: 4 })
       end

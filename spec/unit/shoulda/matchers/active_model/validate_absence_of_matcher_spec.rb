@@ -33,16 +33,19 @@ describe Shoulda::Matchers::ActiveModel::ValidateAbsenceOfMatcher, type: :model 
               to validate_absence_of(:attr)
           end
 
-          it_supports 'ignoring_interference_by_writer', {
-            raise_if_not_qualified: {
-              changing_values_with: :next_value
-            },
-            accept_if_qualified_but_changing_value_interferes: {
-              changing_values_with: :next_value
+          it_supports(
+            'ignoring_interference_by_writer',
+            tests: {
+              raise_if_not_qualified: {
+                changing_values_with: :next_value
+              },
+              accept_if_qualified_but_changing_value_does_not_interfere: {
+                changing_values_with: :next_value
+              },
             },
             model_creator: :active_record,
             column_type: type
-          }
+          )
         end
       end
     end
@@ -74,15 +77,18 @@ Example did not properly validate that :attr is empty/falsy.
         expect(active_model_validating_absence_of(:attr)).to validate_absence_of(:attr).with_message(nil)
       end
 
-      it_supports 'ignoring_interference_by_writer', {
-        raise_if_not_qualified: {
-          changing_values_with: :upcase
-        },
-        accept_if_qualified_but_changing_value_interferes: {
-          changing_values_with: :upcase
+      it_supports(
+        'ignoring_interference_by_writer',
+        tests: {
+          raise_if_not_qualified: {
+            changing_values_with: :upcase
+          },
+          accept_if_qualified_but_changing_value_does_not_interfere: {
+            changing_values_with: :upcase
+          },
         },
         model_creator: :active_model
-      }
+      )
     end
 
     context 'an ActiveModel class without an absence validation' do
@@ -106,15 +112,18 @@ Example did not properly validate that :attr is empty/falsy.
         expect(having_many(:children, absence: true)).to validate_absence_of(:children)
       end
 
-      it_supports 'ignoring_interference_by_writer', {
-        raise_if_not_qualified: {
-          changing_values_with: :next_value
-        },
-        accept_if_qualified_but_changing_value_interferes: {
-          changing_values_with: :next_value
+      it_supports(
+        'ignoring_interference_by_writer',
+        tests: {
+          raise_if_not_qualified: {
+            changing_values_with: :next_value
+          },
+          accept_if_qualified_but_changing_value_does_not_interfere: {
+            changing_values_with: :next_value
+          },
         },
         model_creator: :"active_record/has_many"
-      }
+      )
     end
 
     context 'a has_many association without an absence validation' do
@@ -130,15 +139,18 @@ Example did not properly validate that :attr is empty/falsy.
         expect(model).to validate_absence_of(:children)
       end
 
-      it_supports 'ignoring_interference_by_writer', {
-        raise_if_not_qualified: {
-          changing_values_with: :next_value
-        },
-        accept_if_qualified_but_changing_value_interferes: {
-          changing_values_with: :next_value
+      it_supports(
+        'ignoring_interference_by_writer',
+        tests: {
+          raise_if_not_qualified: {
+            changing_values_with: :next_value
+          },
+          accept_if_qualified_but_changing_value_does_not_interfere: {
+            changing_values_with: :next_value
+          },
         },
         model_creator: :"active_record/habtm"
-      }
+      )
     end
 
     context 'a non-absent has_and_belongs_to_many association' do

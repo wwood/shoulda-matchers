@@ -19,13 +19,14 @@ describe Shoulda::Matchers::ActiveModel::ValidateExclusionOfMatcher, type: :mode
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        changing_values_with: :next_value,
-        expected_message: <<-MESSAGE
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          changing_values_with: :next_value,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that :attr lies outside the range ‹2›
 to ‹5›.
   After setting :attr to ‹1› -- which was read back as ‹2› -- the
@@ -39,7 +40,8 @@ to ‹5›.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        },
       },
       model_creator: :active_model
     ) do
@@ -147,13 +149,14 @@ to ‹5›.
 
     it_supports(
       'ignoring_interference_by_writer',
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        changing_values_with: :next_value,
-        expected_message: <<-MESSAGE
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          changing_values_with: :next_value,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that :attr is neither ‹"one"› nor
 ‹"two"›.
   After setting :attr to ‹"one"› -- which was read back as ‹"onf"› --
@@ -166,6 +169,7 @@ Example did not properly validate that :attr is neither ‹"one"› nor
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
         MESSAGE
+        },
       },
       model_creator: :active_model
     ) do

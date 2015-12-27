@@ -545,7 +545,7 @@ module Shoulda
             end
 
             submatcher.ignoring_interference_by_writer(
-              ignoring_interference_by_writer
+              ignore_interference_by_writer
             )
           end
         end

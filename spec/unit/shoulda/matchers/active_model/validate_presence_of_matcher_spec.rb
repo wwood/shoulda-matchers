@@ -10,18 +10,20 @@ describe Shoulda::Matchers::ActiveModel::ValidatePresenceOfMatcher, type: :model
       expect(validating_presence).to matcher.with_message(nil)
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :never_falsy
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :nil_to_blank
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :never_falsy,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :never_falsy
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :nil_to_blank
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :never_falsy,
+          expected_message: <<-MESSAGE
 Example did not properly validate that :attr cannot be empty/falsy.
   After setting :attr to ‹nil› -- which was read back as ‹"dummy value"›
   -- the matcher expected the Example to be invalid, but it was valid
@@ -32,9 +34,10 @@ Example did not properly validate that :attr cannot be empty/falsy.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }
+    )
   end
 
   context 'a model without a presence validation' do
@@ -64,18 +67,20 @@ Example did not properly validate that :attr cannot be empty/falsy.
       expect(active_model_validating_presence).to matcher.with_message(nil)
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :never_falsy
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :nil_to_blank
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :never_falsy,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :never_falsy
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :nil_to_blank
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :never_falsy,
+          expected_message: <<-MESSAGE
 Example did not properly validate that :attr cannot be empty/falsy.
   After setting :attr to ‹nil› -- which was read back as ‹"dummy value"›
   -- the matcher expected the Example to be invalid, but it was valid
@@ -86,9 +91,10 @@ Example did not properly validate that :attr cannot be empty/falsy.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }
+    )
 
     def model_creator
       :active_model
@@ -116,18 +122,20 @@ Example did not properly validate that :attr cannot be empty/falsy.
       expect(has_many_children(presence: true)).to validate_presence_of(:children)
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :never_falsy
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :nil_to_blank
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :never_falsy,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :never_falsy
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :nil_to_blank
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :never_falsy,
+          expected_message: <<-MESSAGE
 Example did not properly validate that :attr cannot be empty/falsy.
   After setting :attr to ‹nil› -- which was read back as ‹"dummy value"›
   -- the matcher expected the Example to be invalid, but it was valid
@@ -138,9 +146,10 @@ Example did not properly validate that :attr cannot be empty/falsy.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }
+    )
 
     def model_creator
       :"active_record/has_many"
@@ -174,18 +183,20 @@ Example did not properly validate that :attr cannot be empty/falsy.
       end.new
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :never_falsy
-      },
-      accept_if_qualified_but_changing_value_does_not_interfere: {
-        changing_values_with: :nil_to_blank
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :attr,
-        changing_values_with: :never_falsy,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :never_falsy
+        },
+        accept_if_qualified_but_changing_value_does_not_interfere: {
+          changing_values_with: :nil_to_blank
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :attr,
+          changing_values_with: :never_falsy,
+          expected_message: <<-MESSAGE
 Example did not properly validate that :attr cannot be empty/falsy.
   After setting :attr to ‹nil› -- which was read back as ‹"dummy value"›
   -- the matcher expected the Example to be invalid, but it was valid
@@ -196,9 +207,10 @@ Example did not properly validate that :attr cannot be empty/falsy.
   this test is failing. If you've overridden the writer method for this
   attribute, then you may need to change it to make this test pass, or
   do something else entirely.
-        MESSAGE
+          MESSAGE
+        }
       }
-    }
+    )
 
     def model_creator
       :"active_record/has_and_belongs_to_many"

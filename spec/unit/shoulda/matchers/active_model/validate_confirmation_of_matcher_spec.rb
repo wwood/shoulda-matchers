@@ -28,15 +28,17 @@ describe Shoulda::Matchers::ActiveModel::ValidateConfirmationOfMatcher, type: :m
       end
     end
 
-    it_supports 'ignoring_interference_by_writer', {
-      raise_if_not_qualified: {
-        changing_values_with: :next_value,
-      },
-      reject_if_qualified_but_changing_value_interferes: {
-        model_name: 'Example',
-        attribute_name: :password,
-        changing_values_with: :next_value,
-        expected_message: <<-MESSAGE
+    it_supports(
+      'ignoring_interference_by_writer',
+      tests: {
+        raise_if_not_qualified: {
+          changing_values_with: :next_value,
+        },
+        reject_if_qualified_but_changing_value_interferes: {
+          model_name: 'Example',
+          attribute_name: :password,
+          changing_values_with: :next_value,
+          expected_message: <<-MESSAGE.strip
 Example did not properly validate that :password_confirmation matches
 :password.
   After setting :password_confirmation to ‹"same value"›, then setting
@@ -51,10 +53,11 @@ Example did not properly validate that :password_confirmation matches
   with why this test is failing. If you've overridden the writer method
   for this attribute, then you may need to change it to make this test
   pass, or do something else entirely.
-        MESSAGE
+          MESSAGE
+        },
       },
       model_creator: :active_model
-    }
+    )
   end
 
   context 'when the model does not have a confirmation attribute' do

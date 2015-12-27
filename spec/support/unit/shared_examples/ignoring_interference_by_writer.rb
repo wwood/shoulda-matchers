@@ -1,16 +1,17 @@
 shared_examples_for 'ignoring_interference_by_writer' do |common_config|
-  valid_common_config_keys = [
+  valid_tests = [
     :raise_if_not_qualified,
     :accept_if_qualified_but_changing_value_does_not_interfere,
     :reject_if_qualified_but_changing_value_interferes
   ]
-  common_config.assert_valid_keys(valid_common_config_keys)
+  tests = common_config.fetch(:tests)
+  tests.assert_valid_keys(valid_tests)
 
   define_method(:common_config) { common_config }
 
   context 'when the writer method for the attribute changes incoming values' do
     context 'and the matcher has not been qualified with ignoring_interference_by_writer' do
-      config_for_test = common_config[:raise_if_not_qualified]
+      config_for_test = tests[:raise_if_not_qualified]
 
       if config_for_test
         it 'raises an AttributeChangedValueError' do
@@ -31,7 +32,7 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
 
     context 'and the matcher has been qualified with ignoring_interference_by_writer' do
       context 'and the value change does not cause a test failure' do
-        config_for_test = common_config[:accept_if_qualified_but_changing_value_does_not_interfere]
+        config_for_test = tests[:accept_if_qualified_but_changing_value_does_not_interfere]
 
         if config_for_test
           it 'accepts (and does not raise an error)' do
@@ -45,7 +46,7 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
       end
 
       context 'and the value change causes a test failure' do
-        config_for_test = common_config[:reject_if_qualified_but_changing_value_interferes]
+        config_for_test = tests[:reject_if_qualified_but_changing_value_interferes]
 
         if config_for_test
           it 'lists how the value got changed in the failure message' do
