@@ -5,9 +5,15 @@ module UnitTests
     def initialize(args)
       @args = args.deep_dup
       @matcher_proc = @args.delete(:matcher_proc)
-      @specified_model_creator = @args.delete(:model_creator)
       @existing_value_specified = @args.key?(:existing_value)
       @existing_value = @args.delete(:existing_value) { nil }
+
+      @specified_model_creator = @args.delete(:model_creator) do
+        raise KeyError.new(<<-MESSAGE)
+:model_creator is missing. You can either provide it as an option or as
+a method.
+        MESSAGE
+      end
 
       @model_creator = model_creator_class.new(@args)
     end

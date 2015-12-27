@@ -1,4 +1,11 @@
 shared_examples_for 'ignoring_interference_by_writer' do |common_config|
+  valid_common_config_keys = [
+    :raise_if_not_qualified,
+    :accept_if_qualified_but_changing_value_does_not_interfere,
+    :reject_if_qualified_but_changing_value_interferes
+  ]
+  common_config.assert_valid_keys(valid_common_config_keys)
+
   define_method(:common_config) { common_config }
 
   context 'when the writer method for the attribute changes incoming values' do
@@ -54,7 +61,7 @@ shared_examples_for 'ignoring_interference_by_writer' do |common_config|
               message = config_for_test[:expected_message_includes]
               expect(&assertion).to fail_with_message_including(message)
             else
-              message = config_for_test[:expected_message]
+              message = config_for_test.fetch(:expected_message)
               expect(&assertion).to fail_with_message(message)
             end
           end

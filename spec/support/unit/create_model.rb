@@ -104,6 +104,8 @@ module UnitTests
         value || 1
       when :never_blank
         value.presence || dummy_value_for_column
+      when :nil_to_blank
+        value || ''
       when :always_nil
         nil
       when :add_character

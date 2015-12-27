@@ -8,49 +8,23 @@ module Shoulda
         class NumericTypeMatcher
           extend Forwardable
 
-          def_delegators :disallow_value_matcher, :matches?, :failure_message,
-            :failure_message_when_negated
+          def_delegators(
+            :disallow_value_matcher,
+            :expects_custom_validation_message?,
+            :expects_strict?,
+            :failure_message,
+            :failure_message_when_negated,
+            :ignore_interference_by_writer,
+            :ignoring_interference_by_writer,
+            :matches?,
+            :on,
+            :strict,
+            :with_message,
+          )
 
-          def initialize(numeric_type_matcher, attribute, options = {})
+          def initialize(numeric_type_matcher, attribute)
             @numeric_type_matcher = numeric_type_matcher
             @attribute = attribute
-            @options = options
-            @message = nil
-            @context = nil
-            @expects_strict = false
-            @expects_custom_validation_message = false
-            @ignoring_interference_by_writer = false
-          end
-
-          def with_message(message)
-            if message
-              @expects_custom_validation_message = true
-              @message = message
-            end
-
-            self
-          end
-
-          def expects_custom_validation_message?
-            @expects_custom_validation_message
-          end
-
-          def strict
-            @expects_strict = true
-            self
-          end
-
-          def expects_strict?
-            @expects_strict
-          end
-
-          def on(context)
-            @context = context
-            self
-          end
-
-          def ignoring_interference_by_writer(value = true)
-            @ignoring_interference_by_writer = value
           end
 
           def allowed_type_name
@@ -79,31 +53,11 @@ module Shoulda
 
           private
 
-          def ignoring_interference_by_writer?
-            !!@ignoring_interference_by_writer
-          end
-
           def disallow_value_matcher
             @_disallow_value_matcher ||= begin
               DisallowValueMatcher.new(disallowed_value).tap do |matcher|
                 matcher.for(attribute)
                 wrap_disallow_value_matcher(matcher)
-
-                matcher.ignoring_interference_by_writer(
-                  ignoring_interference_by_writer?
-                )
-
-                if @message
-                  matcher.with_message(@message)
-                end
-
-                if expects_strict?
-                  matcher.strict
-                end
-
-                if @context
-                  matcher.on(@context)
-                end
               end
             end
           end

@@ -20,8 +20,8 @@ module Shoulda
             @object = args.fetch(:object)
             @attribute_name = args.fetch(:attribute_name)
             @value_written = args.fetch(:value)
-            @ignoring_interference_by_writer =
-              args.fetch(:ignoring_interference_by_writer, false)
+            @ignore_interference_by_writer =
+              args.fetch(:ignore_interference_by_writer)
             @after_set_callback = args.fetch(:after_set_callback, -> { })
 
             @result_of_checking = nil
@@ -82,7 +82,7 @@ module Shoulda
 
             @result_of_checking = successful_check
 
-            if attribute_changed_value? && !ignoring_interference_by_writer?
+            if raise_attribute_changed_value_error?
               @result_of_setting = attribute_changed_value_error
               false
             else
@@ -155,8 +155,13 @@ module Shoulda
             @_value_read ||= object.public_send(attribute_name)
           end
 
-          def ignoring_interference_by_writer?
-            !!@ignoring_interference_by_writer
+          def raise_attribute_changed_value_error?
+            attribute_changed_value? &&
+              !ignore_interference_by_writer.considering?(value_read)
+          end
+
+          def ignore_interference_by_writer
+            @ignore_interference_by_writer
           end
 
           def successful_check

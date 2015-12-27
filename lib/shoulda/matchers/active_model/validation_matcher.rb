@@ -3,14 +3,16 @@ module Shoulda
     module ActiveModel
       # @private
       class ValidationMatcher
+        include Qualifiers::IgnoringInterferenceByWriter
+
         def initialize(attribute)
+          super
           @attribute = attribute
           @expects_strict = false
           @subject = nil
           @last_submatcher_run = nil
           @expected_message = nil
           @expects_custom_validation_message = false
-          @ignoring_interference_by_writer = false
         end
 
         def description
@@ -42,11 +44,6 @@ module Shoulda
 
         def expects_custom_validation_message?
           @expects_custom_validation_message
-        end
-
-        def ignoring_interference_by_writer(value = true)
-          @ignoring_interference_by_writer = value
-          self
         end
 
         def matches?(subject)
@@ -86,32 +83,36 @@ module Shoulda
           subject.class
         end
 
-        def allows_value_of(value, message = nil, &block)
-          matcher = allow_value_matcher(value, message, &block)
+        def allows_value_of(value, message = nil, options = {}, &block)
+          matcher = allow_value_matcher(value, message, options, &block)
           run_allow_or_disallow_matcher(matcher)
         end
 
-        def disallows_value_of(value, message = nil, &block)
-          matcher = disallow_value_matcher(value, message, &block)
+        def disallows_value_of(value, message = nil, options = {}, &block)
+          matcher = disallow_value_matcher(value, message, options, &block)
           run_allow_or_disallow_matcher(matcher)
         end
 
-        def allow_value_matcher(value, message = nil, &block)
-          build_allow_or_disallow_value_matcher(
+        def allow_value_matcher(value, message = nil, options = {}, &block)
+          args = {
             matcher_class: AllowValueMatcher,
             value: value,
             message: message,
-            &block
-          )
+            default_qualifiers: options.fetch(:default_qualifiers, {})
+          }
+
+          build_allow_or_disallow_value_matcher(args, &block)
         end
 
-        def disallow_value_matcher(value, message = nil, &block)
-          build_allow_or_disallow_value_matcher(
+        def disallow_value_matcher(value, message = nil, options = {}, &block)
+          args = {
             matcher_class: DisallowValueMatcher,
             value: value,
             message: message,
-            &block
-          )
+            default_qualifiers: options.fetch(:default_qualifiers, {})
+          }
+
+          build_allow_or_disallow_value_matcher(args, &block)
         end
 
         private
@@ -146,7 +147,7 @@ module Shoulda
             with_message(message).
             on(context).
             strict(expects_strict?).
-            ignoring_interference_by_writer(ignoring_interference_by_writer?)
+            ignoring_interference_by_writer(ignore_interference_by_writer)
 
           yield matcher if block_given?
 
@@ -156,10 +157,6 @@ module Shoulda
         def run_allow_or_disallow_matcher(matcher)
           @last_submatcher_run = matcher
           matcher.matches?(subject)
-        end
-
-        def ignoring_interference_by_writer?
-          !!@ignoring_interference_by_writer
         end
       end
     end

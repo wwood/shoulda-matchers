@@ -313,6 +313,7 @@ module Shoulda
       # @private
       class AllowValueMatcher
         include Helpers
+        include Qualifiers::IgnoringInterferenceByWriter
 
         attr_reader(
           :after_setting_value_callback,
@@ -325,10 +326,10 @@ module Shoulda
         attr_writer :failure_message_preface, :values_to_preset
 
         def initialize(*values)
+          super
           @values_to_set = values
           @options = {}
           @after_setting_value_callback = -> {}
-          @ignoring_interference_by_writer = false
           @expects_strict = false
           @expects_custom_validation_message = false
           @context = nil
@@ -385,15 +386,6 @@ module Shoulda
 
         def expects_strict?
           @expects_strict
-        end
-
-        def ignoring_interference_by_writer(value = true)
-          @ignoring_interference_by_writer = value
-          self
-        end
-
-        def ignoring_interference_by_writer?
-          @ignoring_interference_by_writer
         end
 
         def _after_setting_value(&callback)
@@ -598,7 +590,7 @@ pass, or do something else entirely.
         end
 
         def include_attribute_changed_value_message?
-          ignoring_interference_by_writer? &&
+          !ignore_interference_by_writer.never? &&
             result.attribute_setter.attribute_changed_value?
         end
 

@@ -308,9 +308,12 @@ module Shoulda
         NON_NUMERIC_VALUE = 'abcd'
         DEFAULT_DIFF_TO_COMPARE = 1
 
+        include Qualifiers::IgnoringInterferenceByWriter
+
         attr_reader :diff_to_compare
 
         def initialize(attribute)
+          super
           @attribute = attribute
           @submatchers = []
           @diff_to_compare = DEFAULT_DIFF_TO_COMPARE
@@ -319,7 +322,6 @@ module Shoulda
           @expects_strict = false
           @allowed_type_adjective = nil
           @allowed_type_name = 'number'
-          @ignoring_interference_by_writer = false
           @context = nil
           @expected_message = nil
         end
@@ -408,11 +410,6 @@ module Shoulda
           self
         end
 
-        def ignoring_interference_by_writer(value = true)
-          @ignoring_interference_by_writer = value
-          self
-        end
-
         def matches?(subject)
           @subject = subject
           @number_of_submatchers = @submatchers.size
@@ -478,10 +475,6 @@ module Shoulda
 
         def model
           @subject.class
-        end
-
-        def ignoring_interference_by_writer?
-          !!@ignoring_interference_by_writer
         end
 
         def overall_failure_message
@@ -552,7 +545,7 @@ module Shoulda
             end
 
             submatcher.ignoring_interference_by_writer(
-              ignoring_interference_by_writer?
+              ignoring_interference_by_writer
             )
           end
         end

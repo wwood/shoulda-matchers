@@ -114,6 +114,8 @@ module Shoulda
         def initialize(attribute)
           super
           @expected_message = :blank
+          @ignore_interference_by_writer =
+            Qualifiers::IgnoreInterferenceByWriter.new(when: :blank?)
         end
 
         def matches?(subject)
@@ -146,8 +148,6 @@ module Shoulda
 
         def disallows_original_or_typecast_value?(value, message)
           disallows_value_of(blank_value, @expected_message)
-        rescue ActiveModel::AllowValueMatcher::AttributeChangedValueError => error
-          error.value_read.blank?
         end
 
         def blank_value
